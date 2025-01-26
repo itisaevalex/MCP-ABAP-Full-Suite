@@ -15,7 +15,7 @@ const BaseHandler_1 = require("./BaseHandler");
 class ObjectDeletionHandlers extends BaseHandler_1.BaseHandler {
     getTools() {
         return [{
-                name: 'delete_object',
+                name: 'deleteObject',
                 description: 'Deletes an ABAP object from the system',
                 inputSchema: {
                     type: 'object',
