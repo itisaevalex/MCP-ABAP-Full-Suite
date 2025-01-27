@@ -57,41 +57,65 @@ class AuthHandlers extends BaseHandler_js_1.BaseHandler {
     }
     handleLogin(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            const loginResult = yield this.adtclient.login();
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify(loginResult)
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                const loginResult = yield this.adtclient.login();
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(loginResult)
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Login failed: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleLogout(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.adtclient.logout();
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({ status: 'Logged out successfully' })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.logout();
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ status: 'Logged out successfully' })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Logout failed: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleDropSession(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.adtclient.dropSession();
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({ status: 'Session cleared' })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.dropSession();
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ status: 'Session cleared' })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Drop session failed: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

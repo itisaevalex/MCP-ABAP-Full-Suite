@@ -91,22 +91,32 @@ export class TransportHandlers extends BaseHandler {
       required: ['objSourceUrl']
     });
     
-    // TODO: Implement actual transport info logic
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success',
-            transportInfo: {
-              objSourceUrl: args.objSourceUrl,
-              devClass: args.devClass || 'DEFAULT', 
-              operation: args.operation || 'INSERT'
-            }
-          })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      const transportInfo = await this.adtclient.transportInfo(
+        args.objSourceUrl,
+        args.devClass,
+        args.operation
+      );
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              transportInfo
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get transport info: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleCreateTransport(args: any): Promise<any> {
@@ -121,19 +131,34 @@ export class TransportHandlers extends BaseHandler {
       required: ['objSourceUrl', 'REQUEST_TEXT', 'DEVCLASS']
     });
     
-    // TODO: Implement actual transport creation
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success',
-            transportNumber: 'placeholder-transport-number',
-            message: 'Transport created successfully'
-          })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      const transportResult = await this.adtclient.createTransport(
+        args.objSourceUrl,
+        args.REQUEST_TEXT,
+        args.DEVCLASS,
+        args.transportLayer
+      );
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              transportNumber: transportResult,
+              message: 'Transport created successfully'
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to create transport: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleHasTransportConfig(args: any): Promise<any> {
@@ -142,17 +167,27 @@ export class TransportHandlers extends BaseHandler {
       properties: {}
     });
     
-    // TODO: Implement actual transport config check
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success',
-            hasConfig: true
-          })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      const hasConfig = await this.adtclient.hasTransportConfig();
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              hasConfig
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to check transport config: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

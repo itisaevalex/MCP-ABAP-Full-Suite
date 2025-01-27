@@ -38,19 +38,29 @@ export class ObjectLockHandlers extends BaseHandler {
       required: ['objectUrl']
     });
     
-    // TODO: Implement object locking
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success', 
-            locked: true,
-            lockHandle: 'mock-lock-handle'
-          })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      const lockResult = await this.adtclient.lock(args.objectUrl, args.accessMode);
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              locked: true,
+              lockHandle: lockResult.LOCK_HANDLE
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to lock object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleUnlockObject(args: any): Promise<any> {
@@ -63,17 +73,27 @@ export class ObjectLockHandlers extends BaseHandler {
       required: ['objectUrl', 'lockHandle']
     });
     
-    // TODO: Implement object unlocking
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success',
-            unlocked: true
-          })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      await this.adtclient.unLock(args.objectUrl, args.lockHandle);
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              unlocked: true
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to unlock object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

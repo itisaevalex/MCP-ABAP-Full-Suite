@@ -296,16 +296,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl']
             });
-            // TODO: Implement object structure retrieval
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            structure: {}
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const structure = yield this.adtclient.objectStructure(args.objectUrl);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                structure
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get object structure: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleGetObjectSource(args) {
@@ -318,15 +326,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectSourceUrl']
             });
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            source: yield this.adtclient.getObjectSource(args.objectSourceUrl)
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const source = yield this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                source
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get object source: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleSetObjectSource(args) {
@@ -341,16 +358,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectSourceUrl', 'source', 'lockHandle']
             });
-            // TODO: Implement object source update
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            updated: true
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.setObjectSource(args.objectSourceUrl, args.source, args.lockHandle, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                updated: true
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to set object source: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleFindObjectPath(args) {
@@ -362,16 +387,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl']
             });
-            // TODO: Implement object path finding
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            path: '/path/to/object'
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const path = yield this.adtclient.findObjectPath(args.objectUrl);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                path
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to find object path: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleValidateNewObject(args) {
@@ -383,16 +416,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['options']
             });
-            // TODO: Implement new object validation
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            valid: true
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.validateNewObject(args.options);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to validate new object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleCreateObject(args) {
@@ -410,16 +451,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
             });
-            // TODO: Implement object creation
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            objectUrl: 'new/object/url'
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.createObject(args.objtype, args.name, args.parentName, args.description, args.parentPath, args.responsible, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to create object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleDeleteObject(args) {
@@ -433,16 +482,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl', 'lockHandle']
             });
-            // TODO: Implement object deletion
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            deleted: true
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.deleteObject(args.objectUrl, args.lockHandle, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                deleted: true
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to delete object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleActivate(args) {
@@ -455,16 +512,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['object']
             });
-            // TODO: Implement object activation
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            activated: true
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.activate(args.object, args.preauditRequested);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to activate object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleInactiveObjects(args) {
@@ -473,16 +538,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 type: 'object',
                 properties: {}
             });
-            // TODO: Implement inactive objects retrieval
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            inactiveObjects: []
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.inactiveObjects();
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get inactive objects: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleMainPrograms(args) {
@@ -494,16 +567,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['includeUrl']
             });
-            // TODO: Implement main programs retrieval
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            programs: []
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.mainPrograms(args.includeUrl);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get main programs: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleLock(args) {
@@ -516,16 +597,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl']
             });
-            // TODO: Implement object locking
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            lockHandle: 'lock-handle'
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.lock(args.objectUrl, args.accessMode);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to lock object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleUnLock(args) {
@@ -538,16 +627,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl', 'lockHandle']
             });
-            // TODO: Implement object unlocking
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            unlocked: true
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.unLock(args.objectUrl, args.lockHandle);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                unlocked: true
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to unlock object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleSearchObject(args) {
@@ -561,16 +658,24 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['query']
             });
-            // TODO: Implement object search
-            return {
-                content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            results: yield this.adtclient.searchObject(args.query)
-                        })
-                    }]
-            };
+            const startTime = performance.now();
+            try {
+                const results = yield this.adtclient.searchObject(args.query, args.objType, args.max);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                results
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to search objects: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

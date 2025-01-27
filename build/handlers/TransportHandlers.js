@@ -101,22 +101,26 @@ class TransportHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objSourceUrl']
             });
-            // TODO: Implement actual transport info logic
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            transportInfo: {
-                                objSourceUrl: args.objSourceUrl,
-                                devClass: args.devClass || 'DEFAULT',
-                                operation: args.operation || 'INSERT'
-                            }
-                        })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                const transportInfo = yield this.adtclient.transportInfo(args.objSourceUrl, args.devClass, args.operation);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                transportInfo
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get transport info: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleCreateTransport(args) {
@@ -131,19 +135,27 @@ class TransportHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objSourceUrl', 'REQUEST_TEXT', 'DEVCLASS']
             });
-            // TODO: Implement actual transport creation
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            transportNumber: 'placeholder-transport-number',
-                            message: 'Transport created successfully'
-                        })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                const transportResult = yield this.adtclient.createTransport(args.objSourceUrl, args.REQUEST_TEXT, args.DEVCLASS, args.transportLayer);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                transportNumber: transportResult,
+                                message: 'Transport created successfully'
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to create transport: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleHasTransportConfig(args) {
@@ -152,18 +164,26 @@ class TransportHandlers extends BaseHandler_1.BaseHandler {
                 type: 'object',
                 properties: {}
             });
-            // TODO: Implement actual transport config check
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            hasConfig: true
-                        })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                const hasConfig = yield this.adtclient.hasTransportConfig();
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                hasConfig
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to check transport config: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

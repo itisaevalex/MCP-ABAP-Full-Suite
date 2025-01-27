@@ -65,96 +65,90 @@ class ClassHandlers extends BaseHandler_js_1.BaseHandler {
     }
     handleClassIncludes(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    clas: { type: 'string' }
+                },
+                required: ['clas']
+            });
             const startTime = performance.now();
-            let success = false;
             try {
-                this.validateArgs(args, {
-                    type: 'object',
-                    properties: {
-                        clas: { type: 'string' }
-                    },
-                    required: ['clas']
-                });
-                this.checkRateLimit(args.ip || 'default');
                 const result = yield abap_adt_api_1.ADTClient.classIncludes(args.clas);
-                success = true;
+                this.trackRequest(startTime, true);
                 return {
                     content: [{
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }]
                 };
             }
             catch (error) {
-                this.logger.error('Class includes failed', { error });
-                throw error;
-            }
-            finally {
-                this.trackRequest(startTime, success);
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get class includes: ${error.message || 'Unknown error'}`);
             }
         });
     }
     handleClassComponents(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    url: { type: 'string' }
+                },
+                required: ['url']
+            });
             const startTime = performance.now();
-            let success = false;
             try {
-                this.validateArgs(args, {
-                    type: 'object',
-                    properties: {
-                        url: { type: 'string' }
-                    },
-                    required: ['url']
-                });
-                this.checkRateLimit(args.ip || 'default');
                 const result = yield this.adtclient.classComponents(args.url);
-                success = true;
+                this.trackRequest(startTime, true);
                 return {
                     content: [{
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }]
                 };
             }
             catch (error) {
-                this.logger.error('Class components failed', { error });
-                throw error;
-            }
-            finally {
-                this.trackRequest(startTime, success);
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get class components: ${error.message || 'Unknown error'}`);
             }
         });
     }
     handleCreateTestInclude(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    clas: { type: 'string' },
+                    lockHandle: { type: 'string' },
+                    transport: { type: 'string', optional: true }
+                },
+                required: ['clas', 'lockHandle']
+            });
             const startTime = performance.now();
-            let success = false;
             try {
-                this.validateArgs(args, {
-                    type: 'object',
-                    properties: {
-                        clas: { type: 'string' },
-                        lockHandle: { type: 'string' },
-                        transport: { type: 'string', optional: true }
-                    },
-                    required: ['clas', 'lockHandle']
-                });
-                this.checkRateLimit(args.ip || 'default');
                 const result = yield this.adtclient.createTestInclude(args.clas, args.lockHandle, args.transport);
-                success = true;
+                this.trackRequest(startTime, true);
                 return {
                     content: [{
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }]
                 };
             }
             catch (error) {
-                this.logger.error('Create test include failed', { error });
-                throw error;
-            }
-            finally {
-                this.trackRequest(startTime, success);
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to create test include: ${error.message || 'Unknown error'}`);
             }
         });
     }

@@ -58,11 +58,24 @@ class ObjectManagementHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
             });
-            // TODO: Implement object creation
-            return {
-                status: 'success',
-                objectUrl: 'new/object/url'
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.createObject(args.objtype, args.name, args.parentName, args.description, args.parentPath, args.responsible, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to create object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleDeleteObject(args) {
@@ -76,11 +89,24 @@ class ObjectManagementHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl', 'lockHandle']
             });
-            // TODO: Implement object deletion
-            return {
-                status: 'success',
-                deleted: true
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.deleteObject(args.objectUrl, args.lockHandle, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                deleted: true
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to delete object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleActivate(args) {
@@ -93,11 +119,24 @@ class ObjectManagementHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['object']
             });
-            // TODO: Implement object activation
-            return {
-                status: 'success',
-                activated: true
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.activate(args.object, args.preauditRequested);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to activate object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleInactiveObjects(args) {
@@ -107,11 +146,24 @@ class ObjectManagementHandlers extends BaseHandler_1.BaseHandler {
                 properties: {},
                 required: []
             });
-            // TODO: Implement inactive objects retrieval
-            return {
-                status: 'success',
-                inactiveObjects: []
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.inactiveObjects();
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get inactive objects: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

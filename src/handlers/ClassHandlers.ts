@@ -54,104 +54,101 @@ export class ClassHandlers extends BaseHandler {
   }
 
   async handleClassIncludes(args: any): Promise<any> {
-    const startTime = performance.now();
-    let success = false;
-    
-    try {
-      this.validateArgs(args, {
-        type: 'object',
-        properties: {
-          clas: { type: 'string' }
-        },
-        required: ['clas']
-      });
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        clas: { type: 'string' }
+      },
+      required: ['clas']
+    });
 
-      this.checkRateLimit(args.ip || 'default');
-      
+    const startTime = performance.now();
+    try {
       const result = await ADTClient.classIncludes(args.clas);
-      success = true;
-      
+      this.trackRequest(startTime, true);
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
         }]
       };
-    } catch (error) {
-      this.logger.error('Class includes failed', { error });
-      throw error;
-    } finally {
-      this.trackRequest(startTime, success);
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get class includes: ${error.message || 'Unknown error'}`
+      );
     }
   }
 
   async handleClassComponents(args: any): Promise<any> {
-    const startTime = performance.now();
-    let success = false;
-    
-    try {
-      this.validateArgs(args, {
-        type: 'object',
-        properties: {
-          url: { type: 'string' }
-        },
-        required: ['url']
-      });
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        url: { type: 'string' }
+      },
+      required: ['url']
+    });
 
-      this.checkRateLimit(args.ip || 'default');
-      
+    const startTime = performance.now();
+    try {
       const result = await this.adtclient.classComponents(args.url);
-      success = true;
-      
+      this.trackRequest(startTime, true);
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
         }]
       };
-    } catch (error) {
-      this.logger.error('Class components failed', { error });
-      throw error;
-    } finally {
-      this.trackRequest(startTime, success);
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get class components: ${error.message || 'Unknown error'}`
+      );
     }
   }
 
   async handleCreateTestInclude(args: any): Promise<any> {
-    const startTime = performance.now();
-    let success = false;
-    
-    try {
-      this.validateArgs(args, {
-        type: 'object',
-        properties: {
-          clas: { type: 'string' },
-          lockHandle: { type: 'string' },
-          transport: { type: 'string', optional: true }
-        },
-        required: ['clas', 'lockHandle']
-      });
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        clas: { type: 'string' },
+        lockHandle: { type: 'string' },
+        transport: { type: 'string', optional: true }
+      },
+      required: ['clas', 'lockHandle']
+    });
 
-      this.checkRateLimit(args.ip || 'default');
-      
+    const startTime = performance.now();
+    try {
       const result = await this.adtclient.createTestInclude(
-        args.clas, 
-        args.lockHandle, 
+        args.clas,
+        args.lockHandle,
         args.transport
       );
-      success = true;
-      
+      this.trackRequest(startTime, true);
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
         }]
       };
-    } catch (error) {
-      this.logger.error('Create test include failed', { error });
-      throw error;
-    } finally {
-      this.trackRequest(startTime, success);
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to create test include: ${error.message || 'Unknown error'}`
+      );
     }
   }
 }

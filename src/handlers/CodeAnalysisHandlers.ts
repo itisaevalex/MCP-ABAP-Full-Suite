@@ -80,102 +80,162 @@ export class CodeAnalysisHandlers extends BaseHandler {
   }
 
   async handleSyntaxCheck(args: any): Promise<any> {
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        code: { type: 'string' }
+      },
+      required: ['code']
+    });
+
+    const startTime = performance.now();
     try {
-      // Call syntaxCheck with the correct number of arguments
       const result = await this.adtclient.syntaxCheck(args.code);
+      this.trackRequest(startTime, true);
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result)
+            text: JSON.stringify({
+              status: 'success',
+              result
+            })
           }
         ]
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({ error: error.message })
-          }
-        ],
-        isError: true
-      };
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Syntax check failed: ${error.message || 'Unknown error'}`
+      );
     }
   }
 
   async handleCodeCompletion(args: any): Promise<any> {
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        sourceUrl: { type: 'string' },
+        source: { type: 'string' },
+        line: { type: 'number' },
+        column: { type: 'number' }
+      },
+      required: ['sourceUrl', 'source', 'line', 'column']
+    });
+
+    const startTime = performance.now();
     try {
-      // Call codeCompletion with the correct number of arguments
-      const result = await this.adtclient.codeCompletion(args.sourceUrl, args.source, args.line, args.column);
+      const result = await this.adtclient.codeCompletion(
+        args.sourceUrl,
+        args.source,
+        args.line,
+        args.column
+      );
+      this.trackRequest(startTime, true);
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result)
+            text: JSON.stringify({
+              status: 'success',
+              result
+            })
           }
         ]
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({ error: error.message })
-          }
-        ],
-        isError: true
-      };
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Code completion failed: ${error.message || 'Unknown error'}`
+      );
     }
   }
 
   async handleFindDefinition(args: any): Promise<any> {
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        url: { type: 'string' },
+        source: { type: 'string' },
+        line: { type: 'number' },
+        startCol: { type: 'number' },
+        endCol: { type: 'number' },
+        implementation: { type: 'boolean', optional: true },
+        mainProgram: { type: 'string', optional: true }
+      },
+      required: ['url', 'source', 'line', 'startCol', 'endCol']
+    });
+
+    const startTime = performance.now();
     try {
-      // Call findDefinition with the correct number of arguments
-      const result = await this.adtclient.findDefinition(args.url, args.source, args.line, args.startCol, args.endCol, args.implementation, args.mainProgram);
+      const result = await this.adtclient.findDefinition(
+        args.url,
+        args.source,
+        args.line,
+        args.startCol,
+        args.endCol,
+        args.implementation,
+        args.mainProgram
+      );
+      this.trackRequest(startTime, true);
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result)
+            text: JSON.stringify({
+              status: 'success',
+              result
+            })
           }
         ]
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({ error: error.message })
-          }
-        ],
-        isError: true
-      };
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Find definition failed: ${error.message || 'Unknown error'}`
+      );
     }
   }
 
   async handleUsageReferences(args: any): Promise<any> {
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        url: { type: 'string' },
+        line: { type: 'number', optional: true },
+        column: { type: 'number', optional: true }
+      },
+      required: ['url']
+    });
+
+    const startTime = performance.now();
     try {
-      // Call usageReferences with the correct number of arguments
-      const result = await this.adtclient.usageReferences(args.url, args.line, args.column);
+      const result = await this.adtclient.usageReferences(
+        args.url,
+        args.line,
+        args.column
+      );
+      this.trackRequest(startTime, true);
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result)
+            text: JSON.stringify({
+              status: 'success',
+              result
+            })
           }
         ]
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({ error: error.message })
-          }
-        ],
-        isError: true
-      };
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Usage references failed: ${error.message || 'Unknown error'}`
+      );
     }
   }
 }

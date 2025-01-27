@@ -31,26 +31,41 @@ export class ObjectDeletionHandlers extends BaseHandler {
   }
 
   async handleDeleteObject(args: any): Promise<any> {
+    this.validateArgs(args, {
+      type: 'object',
+      properties: {
+        objectUrl: { type: 'string' },
+        lockHandle: { type: 'string' },
+        transport: { type: 'string' }
+      },
+      required: ['objectUrl', 'lockHandle']
+    });
+
+    const startTime = performance.now();
     try {
-      const result = await this.adtclient.deleteObject(args.objectUrl, args.lockHandle, args.transport);
+      const result = await this.adtclient.deleteObject(
+        args.objectUrl,
+        args.lockHandle,
+        args.transport
+      );
+      this.trackRequest(startTime, true);
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result)
+            text: JSON.stringify({
+              status: 'success',
+              result
+            })
           }
         ]
       };
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({ error: error.message })
-          }
-        ],
-        isError: true
-      };
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to delete object: ${error.message || 'Unknown error'}`
+      );
     }
   }
 }

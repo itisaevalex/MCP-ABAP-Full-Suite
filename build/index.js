@@ -26,7 +26,6 @@ const ObjectHandlers_js_1 = require("./handlers/ObjectHandlers.js");
 const ClassHandlers_js_1 = require("./handlers/ClassHandlers.js");
 const CodeAnalysisHandlers_js_1 = require("./handlers/CodeAnalysisHandlers.js");
 (0, dotenv_1.config)({ path: path_1.default.resolve(__dirname, '../.env') });
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 class AbapAdtServer extends index_js_1.Server {
     constructor() {
         super({

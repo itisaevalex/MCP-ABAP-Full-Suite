@@ -46,38 +46,68 @@ export class AuthHandlers extends BaseHandler {
   }
 
   private async handleLogin(args: any) {
-    const loginResult = await this.adtclient.login();
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(loginResult)
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      const loginResult = await this.adtclient.login();
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(loginResult)
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Login failed: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   private async handleLogout(args: any) {
-    this.adtclient.logout();
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({ status: 'Logged out successfully' })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      await this.adtclient.logout();
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ status: 'Logged out successfully' })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Logout failed: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   private async handleDropSession(args: any) {
-    this.adtclient.dropSession();
-    return {
-      content: [
-        {
-          type: 'text', 
-          text: JSON.stringify({ status: 'Session cleared' })
-        }
-      ]
-    };
+    const startTime = performance.now();
+    try {
+      await this.adtclient.dropSession();
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text', 
+            text: JSON.stringify({ status: 'Session cleared' })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Drop session failed: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

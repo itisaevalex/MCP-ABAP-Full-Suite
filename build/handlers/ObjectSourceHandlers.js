@@ -65,11 +65,26 @@ class ObjectSourceHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectSourceUrl']
             });
-            // TODO: Implement object source retrieval
-            return {
-                status: 'success',
-                source: ''
-            };
+            const startTime = performance.now();
+            try {
+                const source = yield this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                source
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get object source: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleSetObjectSource(args) {
@@ -84,11 +99,26 @@ class ObjectSourceHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectSourceUrl', 'source', 'lockHandle']
             });
-            // TODO: Implement object source update
-            return {
-                status: 'success',
-                updated: true
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.setObjectSource(args.objectSourceUrl, args.source, args.lockHandle, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                updated: true
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to set object source: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

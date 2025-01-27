@@ -69,11 +69,26 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       required: ['objectUrl']
     });
     
-    // TODO: Implement object registration info retrieval
-    return {
-      status: 'success',
-      info: {}
-    };
+    const startTime = performance.now();
+    try {
+      const info = await this.adtclient.objectRegistrationInfo(args.objectUrl);
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            info
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get registration info: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleValidateNewObject(args: any): Promise<any> {
@@ -85,11 +100,26 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       required: ['options']
     });
     
-    // TODO: Implement new object validation
-    return {
-      status: 'success',
-      valid: true
-    };
+    const startTime = performance.now();
+    try {
+      const result = await this.adtclient.validateNewObject(args.options);
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to validate new object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleCreateObject(args: any): Promise<any> {
@@ -107,10 +137,33 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
     });
     
-    // TODO: Implement object creation
-    return {
-      status: 'success',
-      created: true
-    };
+    const startTime = performance.now();
+    try {
+      const result = await this.adtclient.createObject(
+        args.objtype,
+        args.name,
+        args.parentName,
+        args.description,
+        args.parentPath,
+        args.responsible,
+        args.transport
+      );
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to create object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

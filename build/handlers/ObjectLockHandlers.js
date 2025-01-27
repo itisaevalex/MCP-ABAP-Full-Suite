@@ -49,19 +49,27 @@ class ObjectLockHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl']
             });
-            // TODO: Implement object locking
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            locked: true,
-                            lockHandle: 'mock-lock-handle'
-                        })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                const lockResult = yield this.adtclient.lock(args.objectUrl, args.accessMode);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                locked: true,
+                                lockHandle: lockResult.LOCK_HANDLE
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to lock object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleUnlockObject(args) {
@@ -74,18 +82,26 @@ class ObjectLockHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl', 'lockHandle']
             });
-            // TODO: Implement object unlocking
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            unlocked: true
-                        })
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            try {
+                yield this.adtclient.unLock(args.objectUrl, args.lockHandle);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                unlocked: true
+                            })
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to unlock object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

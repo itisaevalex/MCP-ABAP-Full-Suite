@@ -47,11 +47,34 @@ export class ObjectManagementHandlers extends BaseHandler {
       required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
     });
     
-    // TODO: Implement object creation
-    return {
-      status: 'success',
-      objectUrl: 'new/object/url'
-    };
+    const startTime = performance.now();
+    try {
+      const result = await this.adtclient.createObject(
+        args.objtype,
+        args.name,
+        args.parentName,
+        args.description,
+        args.parentPath,
+        args.responsible,
+        args.transport
+      );
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to create object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleDeleteObject(args: any): Promise<any> {
@@ -65,11 +88,30 @@ export class ObjectManagementHandlers extends BaseHandler {
       required: ['objectUrl', 'lockHandle']
     });
     
-    // TODO: Implement object deletion
-    return {
-      status: 'success',
-      deleted: true
-    };
+    const startTime = performance.now();
+    try {
+      await this.adtclient.deleteObject(
+        args.objectUrl,
+        args.lockHandle,
+        args.transport
+      );
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            deleted: true
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to delete object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleActivate(args: any): Promise<any> {
@@ -82,11 +124,26 @@ export class ObjectManagementHandlers extends BaseHandler {
       required: ['object']
     });
     
-    // TODO: Implement object activation
-    return {
-      status: 'success',
-      activated: true
-    };
+    const startTime = performance.now();
+    try {
+      const result = await this.adtclient.activate(args.object, args.preauditRequested);
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to activate object: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleInactiveObjects(args: any): Promise<any> {
@@ -96,10 +153,25 @@ export class ObjectManagementHandlers extends BaseHandler {
       required: []
     });
     
-    // TODO: Implement inactive objects retrieval
-    return {
-      status: 'success',
-      inactiveObjects: []
-    };
+    const startTime = performance.now();
+    try {
+      const result = await this.adtclient.inactiveObjects();
+      this.trackRequest(startTime, true);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            status: 'success',
+            result
+          })
+        }]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get inactive objects: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

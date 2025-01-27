@@ -79,11 +79,24 @@ class ObjectRegistrationHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objectUrl']
             });
-            // TODO: Implement object registration info retrieval
-            return {
-                status: 'success',
-                info: {}
-            };
+            const startTime = performance.now();
+            try {
+                const info = yield this.adtclient.objectRegistrationInfo(args.objectUrl);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                info
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to get registration info: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleValidateNewObject(args) {
@@ -95,11 +108,24 @@ class ObjectRegistrationHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['options']
             });
-            // TODO: Implement new object validation
-            return {
-                status: 'success',
-                valid: true
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.validateNewObject(args.options);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to validate new object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
     handleCreateObject(args) {
@@ -117,11 +143,24 @@ class ObjectRegistrationHandlers extends BaseHandler_1.BaseHandler {
                 },
                 required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
             });
-            // TODO: Implement object creation
-            return {
-                status: 'success',
-                created: true
-            };
+            const startTime = performance.now();
+            try {
+                const result = yield this.adtclient.createObject(args.objtype, args.name, args.parentName, args.description, args.parentPath, args.responsible, args.transport);
+                this.trackRequest(startTime, true);
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
+                        }]
+                };
+            }
+            catch (error) {
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to create object: ${error.message || 'Unknown error'}`);
+            }
         });
     }
 }

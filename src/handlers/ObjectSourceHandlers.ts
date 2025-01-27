@@ -52,14 +52,31 @@ export class ObjectSourceHandlers extends BaseHandler {
         objectSourceUrl: { type: 'string' },
         options: { type: 'object' }
       },
-      required: ['objectSourceUrl']
+      required: ['objectSourceUrl'] 
     });
     
-    // TODO: Implement object source retrieval
-    return {
-      status: 'success',
-      source: ''
-    };
+    const startTime = performance.now();
+    try {
+      const source = await this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              source
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get object source: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 
   async handleSetObjectSource(args: any): Promise<any> {
@@ -74,10 +91,32 @@ export class ObjectSourceHandlers extends BaseHandler {
       required: ['objectSourceUrl', 'source', 'lockHandle']
     });
     
-    // TODO: Implement object source update
-    return {
-      status: 'success',
-      updated: true
-    };
+    const startTime = performance.now();
+    try {
+      await this.adtclient.setObjectSource(
+        args.objectSourceUrl,
+        args.source,
+        args.lockHandle,
+        args.transport
+      );
+      this.trackRequest(startTime, true);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              status: 'success',
+              updated: true
+            })
+          }
+        ]
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to set object source: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

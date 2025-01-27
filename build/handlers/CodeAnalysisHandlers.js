@@ -90,109 +90,136 @@ class CodeAnalysisHandlers extends BaseHandler_js_1.BaseHandler {
     }
     handleSyntaxCheck(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    code: { type: 'string' }
+                },
+                required: ['code']
+            });
+            const startTime = performance.now();
             try {
-                // Call syntaxCheck with the correct number of arguments
                 const result = yield this.adtclient.syntaxCheck(args.code);
+                this.trackRequest(startTime, true);
                 return {
                     content: [
                         {
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }
                     ]
                 };
             }
             catch (error) {
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: JSON.stringify({ error: error.message })
-                        }
-                    ],
-                    isError: true
-                };
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Syntax check failed: ${error.message || 'Unknown error'}`);
             }
         });
     }
     handleCodeCompletion(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    sourceUrl: { type: 'string' },
+                    source: { type: 'string' },
+                    line: { type: 'number' },
+                    column: { type: 'number' }
+                },
+                required: ['sourceUrl', 'source', 'line', 'column']
+            });
+            const startTime = performance.now();
             try {
-                // Call codeCompletion with the correct number of arguments
                 const result = yield this.adtclient.codeCompletion(args.sourceUrl, args.source, args.line, args.column);
+                this.trackRequest(startTime, true);
                 return {
                     content: [
                         {
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }
                     ]
                 };
             }
             catch (error) {
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: JSON.stringify({ error: error.message })
-                        }
-                    ],
-                    isError: true
-                };
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Code completion failed: ${error.message || 'Unknown error'}`);
             }
         });
     }
     handleFindDefinition(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    url: { type: 'string' },
+                    source: { type: 'string' },
+                    line: { type: 'number' },
+                    startCol: { type: 'number' },
+                    endCol: { type: 'number' },
+                    implementation: { type: 'boolean', optional: true },
+                    mainProgram: { type: 'string', optional: true }
+                },
+                required: ['url', 'source', 'line', 'startCol', 'endCol']
+            });
+            const startTime = performance.now();
             try {
-                // Call findDefinition with the correct number of arguments
                 const result = yield this.adtclient.findDefinition(args.url, args.source, args.line, args.startCol, args.endCol, args.implementation, args.mainProgram);
+                this.trackRequest(startTime, true);
                 return {
                     content: [
                         {
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }
                     ]
                 };
             }
             catch (error) {
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: JSON.stringify({ error: error.message })
-                        }
-                    ],
-                    isError: true
-                };
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Find definition failed: ${error.message || 'Unknown error'}`);
             }
         });
     }
     handleUsageReferences(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    url: { type: 'string' },
+                    line: { type: 'number', optional: true },
+                    column: { type: 'number', optional: true }
+                },
+                required: ['url']
+            });
+            const startTime = performance.now();
             try {
-                // Call usageReferences with the correct number of arguments
                 const result = yield this.adtclient.usageReferences(args.url, args.line, args.column);
+                this.trackRequest(startTime, true);
                 return {
                     content: [
                         {
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }
                     ]
                 };
             }
             catch (error) {
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: JSON.stringify({ error: error.message })
-                        }
-                    ],
-                    isError: true
-                };
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Usage references failed: ${error.message || 'Unknown error'}`);
             }
         });
     }

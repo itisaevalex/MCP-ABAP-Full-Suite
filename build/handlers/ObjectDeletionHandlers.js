@@ -42,27 +42,34 @@ class ObjectDeletionHandlers extends BaseHandler_js_1.BaseHandler {
     }
     handleDeleteObject(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.validateArgs(args, {
+                type: 'object',
+                properties: {
+                    objectUrl: { type: 'string' },
+                    lockHandle: { type: 'string' },
+                    transport: { type: 'string' }
+                },
+                required: ['objectUrl', 'lockHandle']
+            });
+            const startTime = performance.now();
             try {
                 const result = yield this.adtclient.deleteObject(args.objectUrl, args.lockHandle, args.transport);
+                this.trackRequest(startTime, true);
                 return {
                     content: [
                         {
                             type: 'text',
-                            text: JSON.stringify(result)
+                            text: JSON.stringify({
+                                status: 'success',
+                                result
+                            })
                         }
                     ]
                 };
             }
             catch (error) {
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: JSON.stringify({ error: error.message })
-                        }
-                    ],
-                    isError: true
-                };
+                this.trackRequest(startTime, false);
+                throw new types_js_1.McpError(types_js_1.ErrorCode.InternalError, `Failed to delete object: ${error.message || 'Unknown error'}`);
             }
         });
     }

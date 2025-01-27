@@ -19,8 +19,6 @@ import { CodeAnalysisHandlers } from './handlers/CodeAnalysisHandlers.js';
 
 config({ path: path.resolve(__dirname, '../.env') });
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 export class AbapAdtServer extends Server {
   private adtClient: ADTClient;
   private authHandlers: AuthHandlers;
