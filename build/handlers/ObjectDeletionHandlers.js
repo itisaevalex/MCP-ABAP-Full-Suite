@@ -11,10 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ObjectDeletionHandlers = void 0;
 const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
-const BaseHandler_1 = require("./BaseHandler");
-class ObjectDeletionHandlers extends BaseHandler_1.BaseHandler {
+const BaseHandler_js_1 = require("./BaseHandler.js");
+class ObjectDeletionHandlers extends BaseHandler_js_1.BaseHandler {
     getTools() {
-        return [{
+        return [
+            {
                 name: 'deleteObject',
                 description: 'Deletes an ABAP object from the system',
                 inputSchema: {
@@ -22,11 +23,12 @@ class ObjectDeletionHandlers extends BaseHandler_1.BaseHandler {
                     properties: {
                         objectUrl: { type: 'string' },
                         lockHandle: { type: 'string' },
-                        transport: { type: 'string', optional: true }
+                        transport: { type: 'string' }
                     },
                     required: ['objectUrl', 'lockHandle']
                 }
-            }];
+            }
+        ];
     }
     handle(toolName, args) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -40,27 +42,28 @@ class ObjectDeletionHandlers extends BaseHandler_1.BaseHandler {
     }
     handleDeleteObject(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.validateArgs(args, {
-                type: 'object',
-                properties: {
-                    objectUrl: { type: 'string' },
-                    lockHandle: { type: 'string' },
-                    transport: { type: 'string', optional: true }
-                },
-                required: ['objectUrl', 'lockHandle']
-            });
-            // TODO: Implement object deletion
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            deleted: true
-                        })
-                    }
-                ]
-            };
+            try {
+                const result = yield this.adtclient.deleteObject(args.objectUrl, args.lockHandle, args.transport);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ error: error.message })
+                        }
+                    ],
+                    isError: true
+                };
+            }
         });
     }
 }

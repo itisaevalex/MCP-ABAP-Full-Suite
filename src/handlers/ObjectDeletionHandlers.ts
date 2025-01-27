@@ -1,22 +1,24 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler';
-import type { ToolDefinition } from '../types/tools';
+import { BaseHandler } from './BaseHandler.js';
+import type { ToolDefinition } from '../types/tools.js';
 
 export class ObjectDeletionHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
-    return [{
-      name: 'deleteObject',
-      description: 'Deletes an ABAP object from the system',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          objectUrl: { type: 'string' },
-          lockHandle: { type: 'string' },
-          transport: { type: 'string', optional: true }
-        },
-        required: ['objectUrl', 'lockHandle']
+    return [
+      {
+        name: 'deleteObject',
+        description: 'Deletes an ABAP object from the system',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            objectUrl: { type: 'string' },
+            lockHandle: { type: 'string' },
+            transport: { type: 'string' }
+          },
+          required: ['objectUrl', 'lockHandle']
+        }
       }
-    }];
+    ];
   }
 
   async handle(toolName: string, args: any): Promise<any> {
@@ -29,27 +31,26 @@ export class ObjectDeletionHandlers extends BaseHandler {
   }
 
   async handleDeleteObject(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectUrl: { type: 'string' },
-        lockHandle: { type: 'string' },
-        transport: { type: 'string', optional: true }
-      },
-      required: ['objectUrl', 'lockHandle']
-    });
-    
-    // TODO: Implement object deletion
-    return {
-      content: [
-        {
-          type: 'text', 
-          text: JSON.stringify({
-            status: 'success',
-            deleted: true
-          })
-        }
-      ]
-    };
+    try {
+      const result = await this.adtclient.deleteObject(args.objectUrl, args.lockHandle, args.transport);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: error.message })
+          }
+        ],
+        isError: true
+      };
+    }
   }
 }

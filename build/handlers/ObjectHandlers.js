@@ -323,7 +323,7 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                         type: 'text',
                         text: JSON.stringify({
                             status: 'success',
-                            source: this.adtclient.getObjectSource(args.objectSourceUrl)
+                            source: yield this.adtclient.getObjectSource(args.objectSourceUrl)
                         })
                     }]
             };
@@ -567,7 +567,7 @@ class ObjectHandlers extends BaseHandler_1.BaseHandler {
                         type: 'text',
                         text: JSON.stringify({
                             status: 'success',
-                            results: this.adtclient.searchObject(args.query)
+                            results: yield this.adtclient.searchObject(args.query)
                         })
                     }]
             };

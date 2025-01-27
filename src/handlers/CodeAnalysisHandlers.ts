@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { ADTClient } from 'abap-adt-api';
 
 export class CodeAnalysisHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -11,8 +12,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
         inputSchema: {
           type: 'object',
           properties: {
-            code: { type: 'string' },
-            objectName: { type: 'string' }
+            code: { type: 'string' }
           },
           required: ['code']
         }
@@ -23,10 +23,12 @@ export class CodeAnalysisHandlers extends BaseHandler {
         inputSchema: {
           type: 'object',
           properties: {
-            code: { type: 'string' },
-            position: { type: 'number' }
+            sourceUrl: { type: 'string' },
+            source: { type: 'string' },
+            line: { type: 'number' },
+            column: { type: 'number' }
           },
-          required: ['code', 'position']
+          required: ['sourceUrl', 'source', 'line', 'column']
         }
       },
       {
@@ -35,10 +37,15 @@ export class CodeAnalysisHandlers extends BaseHandler {
         inputSchema: {
           type: 'object',
           properties: {
-            symbol: { type: 'string' },
-            context: { type: 'string' }
+            url: { type: 'string' },
+            source: { type: 'string' },
+            line: { type: 'number' },
+            startCol: { type: 'number' },
+            endCol: { type: 'number' },
+            implementation: { type: 'boolean', optional: true },
+            mainProgram: { type: 'string', optional: true }
           },
-          required: ['symbol']
+          required: ['url', 'source', 'line', 'startCol', 'endCol']
         }
       },
       {
@@ -47,10 +54,11 @@ export class CodeAnalysisHandlers extends BaseHandler {
         inputSchema: {
           type: 'object',
           properties: {
-            symbol: { type: 'string' },
-            scope: { type: 'string' }
+            url: { type: 'string' },
+            line: { type: 'number', optional: true },
+            column: { type: 'number', optional: true }
           },
-          required: ['symbol']
+          required: ['url']
         }
       }
     ];
@@ -71,8 +79,103 @@ export class CodeAnalysisHandlers extends BaseHandler {
     }
   }
 
-  private async handleSyntaxCheck(args: any) { /* implementation */ }
-  private async handleCodeCompletion(args: any) { /* implementation */ }
-  private async handleFindDefinition(args: any) { /* implementation */ }
-  private async handleUsageReferences(args: any) { /* implementation */ }
+  async handleSyntaxCheck(args: any): Promise<any> {
+    try {
+      // Call syntaxCheck with the correct number of arguments
+      const result = await this.adtclient.syntaxCheck(args.code);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: error.message })
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+
+  async handleCodeCompletion(args: any): Promise<any> {
+    try {
+      // Call codeCompletion with the correct number of arguments
+      const result = await this.adtclient.codeCompletion(args.sourceUrl, args.source, args.line, args.column);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: error.message })
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+
+  async handleFindDefinition(args: any): Promise<any> {
+    try {
+      // Call findDefinition with the correct number of arguments
+      const result = await this.adtclient.findDefinition(args.url, args.source, args.line, args.startCol, args.endCol, args.implementation, args.mainProgram);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: error.message })
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+
+  async handleUsageReferences(args: any): Promise<any> {
+    try {
+      // Call usageReferences with the correct number of arguments
+      const result = await this.adtclient.usageReferences(args.url, args.line, args.column);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: error.message })
+          }
+        ],
+        isError: true
+      };
+    }
+  }
 }

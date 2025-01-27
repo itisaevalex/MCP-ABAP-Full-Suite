@@ -65,41 +65,97 @@ class ClassHandlers extends BaseHandler_js_1.BaseHandler {
     }
     handleClassIncludes(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield abap_adt_api_1.ADTClient.classIncludes(args.clas);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify(result)
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            let success = false;
+            try {
+                this.validateArgs(args, {
+                    type: 'object',
+                    properties: {
+                        clas: { type: 'string' }
+                    },
+                    required: ['clas']
+                });
+                this.checkRateLimit(args.ip || 'default');
+                const result = yield abap_adt_api_1.ADTClient.classIncludes(args.clas);
+                success = true;
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }]
+                };
+            }
+            catch (error) {
+                this.logger.error('Class includes failed', { error });
+                throw error;
+            }
+            finally {
+                this.trackRequest(startTime, success);
+            }
         });
     }
     handleClassComponents(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.adtclient.classComponents(args.url);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify(result)
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            let success = false;
+            try {
+                this.validateArgs(args, {
+                    type: 'object',
+                    properties: {
+                        url: { type: 'string' }
+                    },
+                    required: ['url']
+                });
+                this.checkRateLimit(args.ip || 'default');
+                const result = yield this.adtclient.classComponents(args.url);
+                success = true;
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }]
+                };
+            }
+            catch (error) {
+                this.logger.error('Class components failed', { error });
+                throw error;
+            }
+            finally {
+                this.trackRequest(startTime, success);
+            }
         });
     }
     handleCreateTestInclude(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.adtclient.createTestInclude(args.clas, args.lockHandle, args.transport);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify(result)
-                    }
-                ]
-            };
+            const startTime = performance.now();
+            let success = false;
+            try {
+                this.validateArgs(args, {
+                    type: 'object',
+                    properties: {
+                        clas: { type: 'string' },
+                        lockHandle: { type: 'string' },
+                        transport: { type: 'string', optional: true }
+                    },
+                    required: ['clas', 'lockHandle']
+                });
+                this.checkRateLimit(args.ip || 'default');
+                const result = yield this.adtclient.createTestInclude(args.clas, args.lockHandle, args.transport);
+                success = true;
+                return {
+                    content: [{
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }]
+                };
+            }
+            catch (error) {
+                this.logger.error('Create test include failed', { error });
+                throw error;
+            }
+            finally {
+                this.trackRequest(startTime, success);
+            }
         });
     }
 }

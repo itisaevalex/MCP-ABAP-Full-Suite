@@ -21,8 +21,7 @@ class CodeAnalysisHandlers extends BaseHandler_js_1.BaseHandler {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        code: { type: 'string' },
-                        objectName: { type: 'string' }
+                        code: { type: 'string' }
                     },
                     required: ['code']
                 }
@@ -33,10 +32,12 @@ class CodeAnalysisHandlers extends BaseHandler_js_1.BaseHandler {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        code: { type: 'string' },
-                        position: { type: 'number' }
+                        sourceUrl: { type: 'string' },
+                        source: { type: 'string' },
+                        line: { type: 'number' },
+                        column: { type: 'number' }
                     },
-                    required: ['code', 'position']
+                    required: ['sourceUrl', 'source', 'line', 'column']
                 }
             },
             {
@@ -45,10 +46,15 @@ class CodeAnalysisHandlers extends BaseHandler_js_1.BaseHandler {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        symbol: { type: 'string' },
-                        context: { type: 'string' }
+                        url: { type: 'string' },
+                        source: { type: 'string' },
+                        line: { type: 'number' },
+                        startCol: { type: 'number' },
+                        endCol: { type: 'number' },
+                        implementation: { type: 'boolean', optional: true },
+                        mainProgram: { type: 'string', optional: true }
                     },
-                    required: ['symbol']
+                    required: ['url', 'source', 'line', 'startCol', 'endCol']
                 }
             },
             {
@@ -57,10 +63,11 @@ class CodeAnalysisHandlers extends BaseHandler_js_1.BaseHandler {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        symbol: { type: 'string' },
-                        scope: { type: 'string' }
+                        url: { type: 'string' },
+                        line: { type: 'number', optional: true },
+                        column: { type: 'number', optional: true }
                     },
-                    required: ['symbol']
+                    required: ['url']
                 }
             }
         ];
@@ -82,16 +89,112 @@ class CodeAnalysisHandlers extends BaseHandler_js_1.BaseHandler {
         });
     }
     handleSyntaxCheck(args) {
-        return __awaiter(this, void 0, void 0, function* () { });
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Call syntaxCheck with the correct number of arguments
+                const result = yield this.adtclient.syntaxCheck(args.code);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ error: error.message })
+                        }
+                    ],
+                    isError: true
+                };
+            }
+        });
     }
     handleCodeCompletion(args) {
-        return __awaiter(this, void 0, void 0, function* () { });
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Call codeCompletion with the correct number of arguments
+                const result = yield this.adtclient.codeCompletion(args.sourceUrl, args.source, args.line, args.column);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ error: error.message })
+                        }
+                    ],
+                    isError: true
+                };
+            }
+        });
     }
     handleFindDefinition(args) {
-        return __awaiter(this, void 0, void 0, function* () { });
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Call findDefinition with the correct number of arguments
+                const result = yield this.adtclient.findDefinition(args.url, args.source, args.line, args.startCol, args.endCol, args.implementation, args.mainProgram);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ error: error.message })
+                        }
+                    ],
+                    isError: true
+                };
+            }
+        });
     }
     handleUsageReferences(args) {
-        return __awaiter(this, void 0, void 0, function* () { });
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Call usageReferences with the correct number of arguments
+                const result = yield this.adtclient.usageReferences(args.url, args.line, args.column);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(result)
+                        }
+                    ]
+                };
+            }
+            catch (error) {
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ error: error.message })
+                        }
+                    ],
+                    isError: true
+                };
+            }
+        });
     }
 }
 exports.CodeAnalysisHandlers = CodeAnalysisHandlers;
