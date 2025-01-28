@@ -4,25 +4,38 @@ import type { ToolDefinition } from '../types/tools';
 
 export class ObjectManagementHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
-    return [{
-      name: 'manage_object',
-      description: 'Manages ABAP object lifecycle operations',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          objectName: { type: 'string' },
-          objectType: { type: 'string' }
-        },
-        required: ['objectName', 'objectType']
+    return [
+      {
+        name: 'activate',
+        description: 'Activate ABAP objects',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            object: { 
+              type: "object",
+              description: 'Single object or array of objects to activate'
+            },
+            preauditRequested: { 
+              type: 'boolean',
+              description: 'Whether to perform pre-audit checks',
+              optional: true
+            }
+          },
+          required: ['object']
+        }
+      },
+      {
+        name: 'inactiveObjects',
+        description: 'Get list of inactive objects',
+        inputSchema: {
+          type: 'object',
+          properties: {}
+        }
       }
-    }];
+    ];
   }
   async handle(toolName: string, args: any): Promise<any> {
     switch (toolName) {
-      case 'createObject':
-        return this.handleCreateObject(args);
-      case 'deleteObject':
-        return this.handleDeleteObject(args);
       case 'activate':
         return this.handleActivate(args);
       case 'inactiveObjects':
@@ -32,93 +45,13 @@ export class ObjectManagementHandlers extends BaseHandler {
     }
   }
 
-  async handleCreateObject(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objtype: { type: 'string' },
-        name: { type: 'string' },
-        parentName: { type: 'string' },
-        description: { type: 'string' },
-        parentPath: { type: 'string' },
-        responsible: { type: 'string' },
-        transport: { type: 'string' }
-      },
-      required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
-    });
-    
-    const startTime = performance.now();
-    try {
-      const result = await this.adtclient.createObject(
-        args.objtype,
-        args.name,
-        args.parentName,
-        args.description,
-        args.parentPath,
-        args.responsible,
-        args.transport
-      );
-      this.trackRequest(startTime, true);
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success',
-            result
-          })
-        }]
-      };
-    } catch (error: any) {
-      this.trackRequest(startTime, false);
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Failed to create object: ${error.message || 'Unknown error'}`
-      );
-    }
-  }
-
-  async handleDeleteObject(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectUrl: { type: 'string' },
-        lockHandle: { type: 'string' },
-        transport: { type: 'string' }
-      },
-      required: ['objectUrl', 'lockHandle']
-    });
-    
-    const startTime = performance.now();
-    try {
-      await this.adtclient.deleteObject(
-        args.objectUrl,
-        args.lockHandle,
-        args.transport
-      );
-      this.trackRequest(startTime, true);
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({
-            status: 'success',
-            deleted: true
-          })
-        }]
-      };
-    } catch (error: any) {
-      this.trackRequest(startTime, false);
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Failed to delete object: ${error.message || 'Unknown error'}`
-      );
-    }
-  }
-
   async handleActivate(args: any): Promise<any> {
     this.validateArgs(args, {
       type: 'object',
       properties: {
-        object: { type: ['object', 'array'] },
+        object: { 
+          type: "object"
+        },
         preauditRequested: { type: 'boolean' }
       },
       required: ['object']

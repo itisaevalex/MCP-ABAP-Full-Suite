@@ -5,30 +5,41 @@ import type { ToolDefinition } from '../types/tools';
 export class ObjectLockHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
     return [{
-      name: 'lock_object',
-      description: 'Locks an ABAP object for editing',
+      name: 'lock',
+      description: 'Lock an object',
       inputSchema: {
         type: 'object',
         properties: {
-          objectName: { type: 'string' },
-          objectType: { type: 'string' }
+          objectUrl: { type: 'string' },
+          accessMode: { type: 'string', optional: true }
         },
-        required: ['objectName', 'objectType']
+        required: ['objectUrl']
+      }
+    }, {
+      name: 'unLock',
+      description: 'Unlock an object',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          objectUrl: { type: 'string' },
+          lockHandle: { type: 'string' }
+        },
+        required: ['objectUrl', 'lockHandle']
       }
     }];
   }
   async handle(toolName: string, args: any): Promise<any> {
     switch (toolName) {
-      case 'lockObject':
-        return this.handleLockObject(args);
-      case 'unlockObject':
-        return this.handleUnlockObject(args);
+      case 'lock':
+        return this.lock(args);
+      case 'unLock':
+        return this.unlock(args);
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown object lock tool: ${toolName}`);
     }
   }
 
-  async handleLockObject(args: any): Promise<any> {
+  async lock(args: any): Promise<any> {
     this.validateArgs(args, {
       type: 'object',
       properties: {
@@ -63,7 +74,7 @@ export class ObjectLockHandlers extends BaseHandler {
     }
   }
 
-  async handleUnlockObject(args: any): Promise<any> {
+  async unlock(args: any): Promise<any> {
     this.validateArgs(args, {
       type: 'object',
       properties: {

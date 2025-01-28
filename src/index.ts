@@ -16,6 +16,11 @@ import { TransportHandlers } from './handlers/TransportHandlers.js';
 import { ObjectHandlers } from './handlers/ObjectHandlers.js';
 import { ClassHandlers } from './handlers/ClassHandlers.js';
 import { CodeAnalysisHandlers } from './handlers/CodeAnalysisHandlers.js';
+import { ObjectLockHandlers } from './handlers/ObjectLockHandlers.js';
+import { ObjectSourceHandlers } from './handlers/ObjectSourceHandlers.js';
+import { ObjectDeletionHandlers } from './handlers/ObjectDeletionHandlers.js';
+import { ObjectManagementHandlers } from './handlers/ObjectManagementHandlers.js';
+import { ObjectRegistrationHandlers } from './handlers/ObjectRegistrationHandlers.js';
 
 config({ path: path.resolve(__dirname, '../.env') });
 
@@ -26,6 +31,11 @@ export class AbapAdtServer extends Server {
   private objectHandlers: ObjectHandlers;
   private classHandlers: ClassHandlers;
   private codeAnalysisHandlers: CodeAnalysisHandlers;
+  private objectLockHandlers: ObjectLockHandlers;
+  private objectSourceHandlers: ObjectSourceHandlers;
+  private objectDeletionHandlers: ObjectDeletionHandlers;
+  private objectManagementHandlers: ObjectManagementHandlers;
+  private objectRegistrationHandlers: ObjectRegistrationHandlers;
 
   constructor() {
     super(
@@ -40,15 +50,17 @@ export class AbapAdtServer extends Server {
       }
     );
 
-    const missingVars = ['ABAP_URL', 'ABAP_USER', 'ABAP_PASSWORD'].filter(v => !process.env[v]);
+    const missingVars = ['SAP_URL', 'SAP_USER', 'SAP_PASSWORD'].filter(v => !process.env[v]);
     if (missingVars.length > 0) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
     
     this.adtClient = new ADTClient(
-      process.env.ABAP_URL as string,
-      process.env.ABAP_USER as string,
-      process.env.ABAP_PASSWORD as string
+      process.env.SAP_URL as string,
+      process.env.SAP_USER as string,
+      process.env.SAP_PASSWORD as string,
+      process.env.SAP_CLIENT as string,
+      process.env.SAP_LANGUAGE as string
     );
 
     // Initialize handlers
@@ -57,6 +69,11 @@ export class AbapAdtServer extends Server {
     this.objectHandlers = new ObjectHandlers(this.adtClient);
     this.classHandlers = new ClassHandlers(this.adtClient);
     this.codeAnalysisHandlers = new CodeAnalysisHandlers(this.adtClient);
+    this.objectLockHandlers = new ObjectLockHandlers(this.adtClient);
+    this.objectSourceHandlers = new ObjectSourceHandlers(this.adtClient);
+    this.objectDeletionHandlers = new ObjectDeletionHandlers(this.adtClient);
+    this.objectManagementHandlers = new ObjectManagementHandlers(this.adtClient);
+    this.objectRegistrationHandlers = new ObjectRegistrationHandlers(this.adtClient);
 
     // Setup tool handlers
     this.setupToolHandlers();
@@ -117,6 +134,11 @@ export class AbapAdtServer extends Server {
           ...this.objectHandlers.getTools(),
           ...this.classHandlers.getTools(),
           ...this.codeAnalysisHandlers.getTools(),
+          ...this.objectLockHandlers.getTools(),
+          ...this.objectSourceHandlers.getTools(),
+          ...this.objectDeletionHandlers.getTools(),
+          ...this.objectManagementHandlers.getTools(),
+          ...this.objectRegistrationHandlers.getTools(),
           {
             name: 'healthcheck',
             description: 'Check server health and connectivity',
@@ -142,24 +164,21 @@ export class AbapAdtServer extends Server {
             
           case 'transportInfo':
           case 'createTransport':
-          case 'lock':
-          case 'unLock':
             result = await this.transportHandlers.handle(request.params.name, request.params.arguments);
             break;
             
+          case 'lock':
+          case 'unLock':
+            result = await this.objectLockHandlers.handle(request.params.name, request.params.arguments);
+            break;
+            
           case 'objectStructure':
-          case 'getObjectSource':
-          case 'setObjectSource':
           case 'searchObject':
           case 'findObjectPath':
-          case 'createObject':
-          case 'deleteObject':
             result = await this.objectHandlers.handle(request.params.name, request.params.arguments);
             break;
             
           case 'classIncludes':
-          case 'mainInclude':
-          case 'mainPrograms':
           case 'classComponents':
             result = await this.classHandlers.handle(request.params.name, request.params.arguments);
             break;
@@ -169,6 +188,26 @@ export class AbapAdtServer extends Server {
           case 'findDefinition':
           case 'usageReferences':
             result = await this.codeAnalysisHandlers.handle(request.params.name, request.params.arguments);
+            break;
+
+          case 'getObjectSource':
+          case 'setObjectSource':
+            result = await this.objectSourceHandlers.handle(request.params.name, request.params.arguments);
+            break;
+
+          case 'deleteObject':
+            result = await this.objectDeletionHandlers.handle(request.params.name, request.params.arguments);
+            break;
+
+          case 'activate':
+          case 'inactiveObjects':
+            result = await this.objectManagementHandlers.handle(request.params.name, request.params.arguments);
+            break;
+
+          case 'objectRegistrationInfo':
+          case 'validateNewObject':
+          case 'createObject':
+            result = await this.objectRegistrationHandlers.handle(request.params.name, request.params.arguments);
             break;
             
           case 'healthcheck':
