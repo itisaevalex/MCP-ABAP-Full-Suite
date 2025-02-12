@@ -7,14 +7,29 @@ export class CodeAnalysisHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
         return [
             {
-                name: 'syntaxCheck',
-                description: 'Perform ABAP syntax check',
+                name: 'syntaxCheckCode',
+                description: 'Perform ABAP syntax check with source code',
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        code: { type: 'string' }
+                        code: { type: 'string' },
+                        url: { type: 'string', optional: true },
+                        mainUrl: { type: 'string', optional: true },
+                        mainProgram: { type: 'string', optional: true },
+                        version: { type: 'string', optional: true }
                     },
                     required: ['code']
+                }
+            },
+            {
+                name: 'syntaxCheckCdsUrl',
+                description: 'Perform ABAP syntax check with CDS URL',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        cdsUrl: { type: 'string' }
+                    },
+                    required: ['cdsUrl']
                 }
             },
             {
@@ -179,8 +194,10 @@ export class CodeAnalysisHandlers extends BaseHandler {
 
     async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
-            case 'syntaxCheck':
-                return this.handleSyntaxCheck(args);
+            case 'syntaxCheckCode':
+                return this.handleSyntaxCheckCode(args);
+            case 'syntaxCheckCdsUrl':
+                return this.handleSyntaxCheckCdsUrl(args);
             case 'codeCompletion':
                 return this.handleCodeCompletion(args);
             case 'findDefinition':
@@ -188,32 +205,55 @@ export class CodeAnalysisHandlers extends BaseHandler {
             case 'usageReferences':
                 return this.handleUsageReferences(args);
             case 'syntaxCheckTypes':
-                return this.adtclient.syntaxCheckTypes();
+                return this.handleSyntaxCheckTypes(args);
             case 'codeCompletionFull':
-                return this.adtclient.codeCompletionFull(args.sourceUrl, args.source, args.line, args.column, args.patternKey);
+                return this.handleCodeCompletionFull(args);
             case 'runClass':
-                return this.adtclient.runClass(args.className);
+                return this.handleRunClass(args);
             case 'codeCompletionElement':
-                return this.adtclient.codeCompletionElement(args.sourceUrl, args.source, args.line, args.column);
+                return this.handleCodeCompletionElement(args);
             case 'usageReferenceSnippets':
-                return this.adtclient.usageReferenceSnippets(args.references);
+                return this.handleUsageReferenceSnippets(args);
             case 'fixProposals':
-                return this.adtclient.fixProposals(args.url, args.source, args.line, args.column);
+                return this.handleFixProposals(args);
             case 'fixEdits':
-                return this.adtclient.fixEdits(args.proposal, args.source);
+                return this.handleFixEdits(args);
             case 'fragmentMappings':
-                return this.adtclient.fragmentMappings(args.url, args.type, args.name);
+                return this.handleFragmentMappings(args);
             case 'abapDocumentation':
-                return this.adtclient.abapDocumentation(args.objectUri, args.body, args.line, args.column, args.language);
+                return this.handleAbapDocumentation(args);
             default:
                 throw new McpError(ErrorCode.MethodNotFound, `Unknown code analysis tool: ${toolName}`);
         }
     }
-
-    async handleSyntaxCheck(args: any): Promise<any> {
+    async handleSyntaxCheckCdsUrl(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.syntaxCheck(args.code);
+            const result = await this.adtclient.syntaxCheck(args.cdsUrl);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Syntax check failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+    async handleSyntaxCheckCode(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.syntaxCheck(args.url, args.mainUrl, args.code, args.mainProgram, args.version);
             this.trackRequest(startTime, true);
             return {
                 content: [
@@ -323,6 +363,231 @@ export class CodeAnalysisHandlers extends BaseHandler {
             throw new McpError(
                 ErrorCode.InternalError,
                 `Usage references failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleSyntaxCheckTypes(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.syntaxCheckTypes();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Syntax check types failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleCodeCompletionFull(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.codeCompletionFull(args.sourceUrl, args.source, args.line, args.column, args.patternKey);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Code completion full failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleRunClass(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.runClass(args.className);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Run class failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleCodeCompletionElement(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.codeCompletionElement(args.sourceUrl, args.source, args.line, args.column);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Code completion element failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleUsageReferenceSnippets(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.usageReferenceSnippets(args.references);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Usage reference snippets failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleFixProposals(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.fixProposals(args.url, args.source, args.line, args.column);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Fix proposals failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleFixEdits(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.fixEdits(args.proposal, args.source);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Fix edits failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleFragmentMappings(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.fragmentMappings(args.url, args.type, args.name);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Fragment mappings failed: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleAbapDocumentation(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.abapDocumentation(args.objectUri, args.body, args.line, args.column, args.language);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `ABAP documentation failed: ${error.message || 'Unknown error'}`
             );
         }
     }

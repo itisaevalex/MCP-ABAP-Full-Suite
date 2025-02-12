@@ -243,7 +243,8 @@ export class AbapAdtServer extends Server {
             case 'classComponents':
                 result = await this.classHandlers.handle(request.params.name, request.params.arguments);
                 break;
-            case 'syntaxCheck':
+            case 'syntaxCheckCode':
+            case 'syntaxCheckCdsUrl':
             case 'codeCompletion':
             case 'findDefinition':
             case 'usageReferences':
