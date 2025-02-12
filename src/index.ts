@@ -9,7 +9,7 @@ import {
   McpError,
   ErrorCode
 } from "@modelcontextprotocol/sdk/types.js";
-import { ADTClient } from "abap-adt-api";
+import { ADTClient, session_types } from "abap-adt-api";
 import path from 'path';
 import { AuthHandlers } from './handlers/AuthHandlers.js';
 import { TransportHandlers } from './handlers/TransportHandlers.js';
@@ -21,6 +21,21 @@ import { ObjectSourceHandlers } from './handlers/ObjectSourceHandlers.js';
 import { ObjectDeletionHandlers } from './handlers/ObjectDeletionHandlers.js';
 import { ObjectManagementHandlers } from './handlers/ObjectManagementHandlers.js';
 import { ObjectRegistrationHandlers } from './handlers/ObjectRegistrationHandlers.js';
+import { NodeHandlers } from './handlers/NodeHandlers.js';
+import { DiscoveryHandlers } from './handlers/DiscoveryHandlers.js';
+import { UnitTestHandlers } from './handlers/UnitTestHandlers.js';
+import { PrettyPrinterHandlers } from './handlers/PrettyPrinterHandlers.js';
+import { GitHandlers } from './handlers/GitHandlers.js';
+import { DdicHandlers } from './handlers/DdicHandlers.js';
+import { ServiceBindingHandlers } from './handlers/ServiceBindingHandlers.js';
+import { QueryHandlers } from './handlers/QueryHandlers.js';
+import { FeedHandlers } from './handlers/FeedHandlers.js';
+import { DebugHandlers } from './handlers/DebugHandlers.js';
+import { RenameHandlers } from './handlers/RenameHandlers.js';
+import { AtcHandlers } from './handlers/AtcHandlers.js';
+import { TraceHandlers } from './handlers/TraceHandlers.js';
+import { RefactorHandlers } from './handlers/RefactorHandlers.js';
+import { RevisionHandlers } from './handlers/RevisionHandlers.js';
 
 config({ path: path.resolve(__dirname, '../.env') });
 
@@ -36,8 +51,23 @@ export class AbapAdtServer extends Server {
   private objectDeletionHandlers: ObjectDeletionHandlers;
   private objectManagementHandlers: ObjectManagementHandlers;
   private objectRegistrationHandlers: ObjectRegistrationHandlers;
+    private nodeHandlers: NodeHandlers;
+    private discoveryHandlers: DiscoveryHandlers;
+    private unitTestHandlers: UnitTestHandlers;
+    private prettyPrinterHandlers: PrettyPrinterHandlers;
+    private gitHandlers: GitHandlers;
+    private ddicHandlers: DdicHandlers;
+    private serviceBindingHandlers: ServiceBindingHandlers;
+    private queryHandlers: QueryHandlers;
+    private feedHandlers: FeedHandlers;
+    private debugHandlers: DebugHandlers;
+    private renameHandlers: RenameHandlers;
+    private atcHandlers: AtcHandlers;
+    private traceHandlers: TraceHandlers;
+    private refactorHandlers: RefactorHandlers;
+    private revisionHandlers: RevisionHandlers;
 
-  constructor() {
+    constructor() {
     super(
       {
         name: "mcp-abap-abap-adt-api",
@@ -62,7 +92,8 @@ export class AbapAdtServer extends Server {
       process.env.SAP_CLIENT as string,
       process.env.SAP_LANGUAGE as string
     );
-
+    this.adtClient.stateful = session_types.stateful
+    
     // Initialize handlers
     this.authHandlers = new AuthHandlers(this.adtClient);
     this.transportHandlers = new TransportHandlers(this.adtClient);
@@ -74,8 +105,24 @@ export class AbapAdtServer extends Server {
     this.objectDeletionHandlers = new ObjectDeletionHandlers(this.adtClient);
     this.objectManagementHandlers = new ObjectManagementHandlers(this.adtClient);
     this.objectRegistrationHandlers = new ObjectRegistrationHandlers(this.adtClient);
+    this.nodeHandlers = new NodeHandlers(this.adtClient);
+    this.discoveryHandlers = new DiscoveryHandlers(this.adtClient);
+    this.unitTestHandlers = new UnitTestHandlers(this.adtClient);
+    this.prettyPrinterHandlers = new PrettyPrinterHandlers(this.adtClient);
+    this.gitHandlers = new GitHandlers(this.adtClient);
+    this.ddicHandlers = new DdicHandlers(this.adtClient);
+    this.serviceBindingHandlers = new ServiceBindingHandlers(this.adtClient);
+    this.queryHandlers = new QueryHandlers(this.adtClient);
+    this.feedHandlers = new FeedHandlers(this.adtClient);
+    this.debugHandlers = new DebugHandlers(this.adtClient);
+    this.renameHandlers = new RenameHandlers(this.adtClient);
+    this.atcHandlers = new AtcHandlers(this.adtClient);
+    this.traceHandlers = new TraceHandlers(this.adtClient);
+    this.refactorHandlers = new RefactorHandlers(this.adtClient);
+    this.revisionHandlers = new RevisionHandlers(this.adtClient);
 
-    // Setup tool handlers
+
+        // Setup tool handlers
     this.setupToolHandlers();
   }
 
@@ -139,7 +186,22 @@ export class AbapAdtServer extends Server {
           ...this.objectDeletionHandlers.getTools(),
           ...this.objectManagementHandlers.getTools(),
           ...this.objectRegistrationHandlers.getTools(),
-          {
+            ...this.nodeHandlers.getTools(),
+            ...this.discoveryHandlers.getTools(),
+            ...this.unitTestHandlers.getTools(),
+            ...this.prettyPrinterHandlers.getTools(),
+            ...this.gitHandlers.getTools(),
+            ...this.ddicHandlers.getTools(),
+            ...this.serviceBindingHandlers.getTools(),
+            ...this.queryHandlers.getTools(),
+            ...this.feedHandlers.getTools(),
+            ...this.debugHandlers.getTools(),
+            ...this.renameHandlers.getTools(),
+            ...this.atcHandlers.getTools(),
+            ...this.traceHandlers.getTools(),
+            ...this.refactorHandlers.getTools(),
+            ...this.revisionHandlers.getTools(),
+            {
             name: 'healthcheck',
             description: 'Check server health and connectivity',
             inputSchema: {
@@ -156,66 +218,174 @@ export class AbapAdtServer extends Server {
         let result: any;
         
         switch (request.params.name) {
-          case 'login':
-          case 'logout':
-          case 'dropSession':
-            result = await this.authHandlers.handle(request.params.name, request.params.arguments);
-            break;
-            
-          case 'transportInfo':
-          case 'createTransport':
-            result = await this.transportHandlers.handle(request.params.name, request.params.arguments);
-            break;
-            
-          case 'lock':
-          case 'unLock':
-            result = await this.objectLockHandlers.handle(request.params.name, request.params.arguments);
-            break;
-            
-          case 'objectStructure':
-          case 'searchObject':
-          case 'findObjectPath':
-            result = await this.objectHandlers.handle(request.params.name, request.params.arguments);
-            break;
-            
-          case 'classIncludes':
-          case 'classComponents':
-            result = await this.classHandlers.handle(request.params.name, request.params.arguments);
-            break;
-            
-          case 'syntaxCheck':
-          case 'codeCompletion':
-          case 'findDefinition':
-          case 'usageReferences':
-            result = await this.codeAnalysisHandlers.handle(request.params.name, request.params.arguments);
-            break;
-
-          case 'getObjectSource':
-          case 'setObjectSource':
-            result = await this.objectSourceHandlers.handle(request.params.name, request.params.arguments);
-            break;
-
-          case 'deleteObject':
-            result = await this.objectDeletionHandlers.handle(request.params.name, request.params.arguments);
-            break;
-
-          case 'activate':
-          case 'inactiveObjects':
-            result = await this.objectManagementHandlers.handle(request.params.name, request.params.arguments);
-            break;
-
-          case 'objectRegistrationInfo':
-          case 'validateNewObject':
-          case 'createObject':
-            result = await this.objectRegistrationHandlers.handle(request.params.name, request.params.arguments);
-            break;
-            
-          case 'healthcheck':
-            result = { status: 'healthy', timestamp: new Date().toISOString() };
-            break;
-            
-          default:
-            throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${request.params.name}`);
+            case 'login':
+            case 'logout':
+            case 'dropSession':
+                result = await this.authHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'transportInfo':
+            case 'createTransport':
+            case 'hasTransportConfig':
+                result = await this.transportHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'lock':
+            case 'unLock':
+                result = await this.objectLockHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'objectStructure':
+            case 'searchObject':
+            case 'findObjectPath':
+            case 'objectTypes':
+            case 'reentranceTicket':
+                result = await this.objectHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'classIncludes':
+            case 'classComponents':
+                result = await this.classHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'syntaxCheck':
+            case 'codeCompletion':
+            case 'findDefinition':
+            case 'usageReferences':
+            case 'syntaxCheckTypes':
+            case 'codeCompletionFull':
+            case 'runClass':
+            case 'codeCompletionElement':
+            case 'usageReferenceSnippets':
+            case 'fixProposals':
+            case 'fixEdits':
+            case 'fragmentMappings':
+            case 'abapDocumentation':
+                result = await this.codeAnalysisHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'getObjectSource':
+            case 'setObjectSource':
+                result = await this.objectSourceHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'deleteObject':
+                result = await this.objectDeletionHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'activate':
+            case 'inactiveObjects':
+                result = await this.objectManagementHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'objectRegistrationInfo':
+            case 'validateNewObject':
+            case 'createObject':
+                result = await this.objectRegistrationHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'nodeContents':
+            case 'mainPrograms':
+                result = await this.nodeHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'featureDetails':
+            case 'collectionFeatureDetails':
+            case 'findCollectionByUrl':
+            case 'loadTypes':
+            case 'adtDiscovery':
+            case 'adtCoreDiscovery':
+            case 'adtCompatibiliyGraph':
+                result = await this.discoveryHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'unitTestRun':
+            case 'unitTestEvaluation':
+            case 'unitTestOccurrenceMarkers':
+            case 'createTestInclude':
+                result = await this.unitTestHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'prettyPrinterSetting':
+            case 'setPrettyPrinterSetting':
+            case 'prettyPrinter':
+            case 'typeHierarchy':
+                result = await this.prettyPrinterHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'gitRepos':
+            case 'gitExternalRepoInfo':
+            case 'gitCreateRepo':
+            case 'gitPullRepo':
+            case 'gitUnlinkRepo':
+            case 'stageRepo':
+            case 'pushRepo':
+            case 'checkRepo':
+            case 'remoteRepoInfo':
+            case 'switchRepoBranch':
+                result = await this.gitHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'annotationDefinitions':
+            case 'ddicElement':
+            case 'ddicRepositoryAccess':
+            case 'packageSearchHelp':
+                result = await this.ddicHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'publishServiceBinding':
+            case 'unPublishServiceBinding':
+            case 'bindingDetails':
+                result = await this.serviceBindingHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'tableContents':
+            case 'runQuery':
+                result = await this.queryHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'feeds':
+            case 'dumps':
+                result = await this.feedHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'debuggerListeners':
+            case 'debuggerListen':
+            case 'debuggerDeleteListener':
+            case 'debuggerSetBreakpoints':
+            case 'debuggerDeleteBreakpoints':
+            case 'debuggerAttach':
+            case 'debuggerSaveSettings':
+            case 'debuggerStackTrace':
+            case 'debuggerVariables':
+            case 'debuggerChildVariables':
+            case 'debuggerStep':
+            case 'debuggerGoToStack':
+            case 'debuggerSetVariableValue':
+                result = await this.debugHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'renameEvaluate':
+            case 'renamePreview':
+            case 'renameExecute':
+                result = await this.renameHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'atcCustomizing':
+            case 'atcCheckVariant':
+            case 'createAtcRun':
+            case 'atcWorklists':
+            case 'atcUsers':
+            case 'atcExemptProposal':
+            case 'atcRequestExemption':
+            case 'isProposalMessage':
+            case 'atcContactUri':
+            case 'atcChangeContact':
+                result = await this.atcHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'tracesList':
+            case 'tracesListRequests':
+            case 'tracesHitList':
+            case 'tracesDbAccess':
+            case 'tracesStatements':
+            case 'tracesSetParameters':
+            case 'tracesCreateConfiguration':
+            case 'tracesDeleteConfiguration':
+            case 'tracesDelete':
+                result = await this.traceHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'extractMethodEvaluate':
+            case 'extractMethodPreview':
+            case 'extractMethodExecute':
+                result = await this.refactorHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'revisions':
+                result = await this.revisionHandlers.handle(request.params.name, request.params.arguments);
+                break;
+            case 'healthcheck':
+                result = { status: 'healthy', timestamp: new Date().toISOString() };
+                break;
+            default:
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${request.params.name}`);
         }
 
         return this.serializeResult(result);
