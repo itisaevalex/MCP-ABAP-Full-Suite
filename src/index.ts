@@ -266,7 +266,8 @@ export class AbapAdtServer extends Server {
             case 'deleteObject':
                 result = await this.objectDeletionHandlers.handle(request.params.name, request.params.arguments);
                 break;
-            case 'activate':
+            case 'activateObjects':
+            case 'activateByName':
             case 'inactiveObjects':
                 result = await this.objectManagementHandlers.handle(request.params.name, request.params.arguments);
                 break;

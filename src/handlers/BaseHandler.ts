@@ -24,41 +24,6 @@ export abstract class BaseHandler {
     this.adtclient = adtclient;
   }
 
-  protected validateArgs(args: any, schema: {
-    type: string;
-    properties: Record<string, any>;
-    required?: string[];
-  }): void {
-    const errors: string[] = [];
-    
-    // Validate type
-    if (schema.type && typeof args !== schema.type) {
-      errors.push(`Expected ${schema.type} but got ${typeof args}`);
-    }
-
-    // Validate properties
-    if (schema.properties) {
-      for (const [key, propSchema] of Object.entries(schema.properties)) {
-        if (args[key] === undefined && schema.required?.includes(key)) {
-          errors.push(`Missing required property: ${key}`);
-          continue;
-        }
-
-        if (args[key] !== undefined && typeof args[key] !== propSchema.type) {
-          errors.push(`Property ${key} expected ${propSchema.type} but got ${typeof args[key]}`);
-        }
-      }
-    }
-
-    if (errors.length > 0) {
-      this.logger.warn('Validation failed', { errors });
-      throw new McpError(
-        CustomErrorCode.InvalidParameters,
-        `Invalid arguments: ${errors.join(', ')}`
-      );
-    }
-  }
-
   protected trackRequest(startTime: number, success: boolean): void {
     const duration = performance.now() - startTime;
     this.metrics.requestCount++;

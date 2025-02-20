@@ -83,7 +83,7 @@ export class TraceHandlers extends BaseHandler {
                             description: 'The ID of the trace.'
                         },
                         options: {
-                            type: 'object',
+                            type: 'string',
                             description: 'Options for retrieving statements.',
                             optional: true
                         }
@@ -98,7 +98,7 @@ export class TraceHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         parameters: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The trace parameters.'
                         }
                     },
@@ -112,7 +112,7 @@ export class TraceHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         config: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The trace configuration.'
                         }
                     },

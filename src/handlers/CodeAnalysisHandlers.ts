@@ -155,7 +155,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        proposal: { type: 'object' },
+                        proposal: { type: 'string' },
                         source: { type: 'string' }
                     },
                     required: ['proposal', 'source']
@@ -253,7 +253,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
     async handleSyntaxCheckCode(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.syntaxCheck(args.url, args.mainUrl, args.code, args.mainProgram, args.version);
+            const result = await this.adtclient.syntaxCheck(args.url, args?.mainUrl, args?.code, args?.mainProgram, args?.version);
             this.trackRequest(startTime, true);
             return {
                 content: [

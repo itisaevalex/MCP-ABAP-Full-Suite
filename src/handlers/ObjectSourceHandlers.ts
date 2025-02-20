@@ -12,7 +12,7 @@ export class ObjectSourceHandlers extends BaseHandler {
           type: 'object',
           properties: {
             objectSourceUrl: { type: 'string' },
-            options: { type: 'object' }
+            options: { type: 'string' }
           },
           required: ['objectSourceUrl']
         }
@@ -46,14 +46,6 @@ export class ObjectSourceHandlers extends BaseHandler {
   }
 
   async handleGetObjectSource(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectSourceUrl: { type: 'string' },
-        options: { type: 'object' }
-      },
-      required: ['objectSourceUrl'] 
-    });
     
     const startTime = performance.now();
     try {
@@ -79,18 +71,7 @@ export class ObjectSourceHandlers extends BaseHandler {
     }
   }
 
-  async handleSetObjectSource(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectSourceUrl: { type: 'string' },
-        source: { type: 'string' },
-        lockHandle: { type: 'string' },
-        transport: { type: 'string' }
-      },
-      required: ['objectSourceUrl', 'source', 'lockHandle']
-    });
-    
+  async handleSetObjectSource(args: any): Promise<any> {    
     const startTime = performance.now();
     try {
       await this.adtclient.setObjectSource(

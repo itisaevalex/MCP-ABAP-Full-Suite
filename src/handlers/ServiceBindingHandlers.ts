@@ -49,7 +49,7 @@ export class ServiceBindingHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         binding: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The service binding.'
                         },
                         index: {

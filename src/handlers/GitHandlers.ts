@@ -131,7 +131,7 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The Git repository.'
                         },
                         user: {
@@ -155,11 +155,11 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The Git repository.'
                         },
                         staging: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The staging information.'
                         },
                         user: {
@@ -183,7 +183,7 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The Git repository.'
                         },
                         user: {
@@ -207,7 +207,7 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The Git repository.'
                         },
                         user: {
@@ -231,7 +231,7 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The Git repository.'
                         },
                         branch: {

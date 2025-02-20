@@ -22,7 +22,7 @@ export class ObjectRegistrationHandlers extends BaseHandler {
         inputSchema: {
           type: 'object',
           properties: {
-            options: { type: 'object' }
+            options: { type: 'string' }
           },
           required: ['options']
         }
@@ -61,14 +61,6 @@ export class ObjectRegistrationHandlers extends BaseHandler {
   }
 
   async handleObjectRegistrationInfo(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectUrl: { type: 'string' }
-      },
-      required: ['objectUrl']
-    });
-    
     const startTime = performance.now();
     try {
       const info = await this.adtclient.objectRegistrationInfo(args.objectUrl);
@@ -92,14 +84,6 @@ export class ObjectRegistrationHandlers extends BaseHandler {
   }
 
   async handleValidateNewObject(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        options: { type: 'object' }
-      },
-      required: ['options']
-    });
-    
     const startTime = performance.now();
     try {
       const result = await this.adtclient.validateNewObject(args.options);
@@ -122,21 +106,7 @@ export class ObjectRegistrationHandlers extends BaseHandler {
     }
   }
 
-  async handleCreateObject(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objtype: { type: 'string' },
-        name: { type: 'string' },
-        parentName: { type: 'string' },
-        description: { type: 'string' },
-        parentPath: { type: 'string' },
-        responsible: { type: 'string', optional: true },
-        transport: { type: 'string', optional: true }
-      },
-      required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
-    });
-    
+  async handleCreateObject(args: any): Promise<any> {    
     const startTime = performance.now();
     try {
       const result = await this.adtclient.createObject(

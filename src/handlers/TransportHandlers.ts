@@ -102,7 +102,7 @@ export class TransportHandlers extends BaseHandler {
                             description: 'The ETag for the transport configuration.'
                         },
                         config: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The transport configuration.'
                         }
                     },

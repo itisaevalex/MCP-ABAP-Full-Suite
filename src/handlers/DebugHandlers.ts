@@ -160,7 +160,7 @@ export class DebugHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         breakpoint: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The breakpoint to delete.'
                         },
                         debuggingMode: {
@@ -222,7 +222,7 @@ export class DebugHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         settings: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The debugger settings.'
                         }
                     },

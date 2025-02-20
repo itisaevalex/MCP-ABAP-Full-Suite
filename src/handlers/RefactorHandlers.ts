@@ -17,7 +17,7 @@ export class RefactorHandlers extends BaseHandler {
                             description: 'The URI of the object.'
                         },
                         range: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The range to extract.'
                         }
                     },
@@ -31,7 +31,7 @@ export class RefactorHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         proposal: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The extract method proposal.'
                         }
                     },
@@ -45,7 +45,7 @@ export class RefactorHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         refactoring: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The refactoring object.'
                         }
                     },

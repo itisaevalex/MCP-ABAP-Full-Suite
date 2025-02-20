@@ -17,7 +17,7 @@ export class UnitTestHandlers extends BaseHandler {
                             description: 'The URL of the object to test.'
                         },
                         flags: {
-                            type: 'object',
+                            type: 'string',
                             description: 'Flags for the unit test run.',
                             optional: true
                         }
@@ -36,7 +36,7 @@ export class UnitTestHandlers extends BaseHandler {
                             description: 'The class to evaluate.'
                         },
                         flags: {
-                            type: 'object',
+                            type: 'string',
                             description: 'Flags for the unit test evaluation.',
                             optional: true
                         }

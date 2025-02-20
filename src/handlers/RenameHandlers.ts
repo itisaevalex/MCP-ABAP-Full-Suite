@@ -39,7 +39,7 @@ export class RenameHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         renameRefactoring: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The rename refactoring proposal.'
                         },
                         transport: {
@@ -58,7 +58,7 @@ export class RenameHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         refactoring: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The rename refactoring.'
                         }
                     },

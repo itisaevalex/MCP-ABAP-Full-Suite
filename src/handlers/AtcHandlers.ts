@@ -109,7 +109,7 @@ export class AtcHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         proposal: {
-                            type: 'object',
+                            type: 'string',
                             description: 'The ATC exemption proposal.'
                         }
                     },
