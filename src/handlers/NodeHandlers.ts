@@ -1,4 +1,4 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { NodeParents, NodeStructure } from "abap-adt-api";
@@ -62,16 +62,71 @@ export class NodeHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'nodeContents':
-                const nodeContentsArgs: { parent_type: NodeParents, parent_name?: string, user_name?: string, parent_tech_name?: string, rebuild_tree?: boolean, parentnodes?: number[] } = arguments_;
-                return this.adtclient.nodeContents(nodeContentsArgs.parent_type, nodeContentsArgs.parent_name, nodeContentsArgs.user_name, nodeContentsArgs.parent_tech_name, nodeContentsArgs.rebuild_tree, nodeContentsArgs.parentnodes);
+                return this.handleNodeContents(args);
             case 'mainPrograms':
-                const mainProgramsArgs: { includeUrl: string } = arguments_;
-                return this.adtclient.mainPrograms(mainProgramsArgs.includeUrl);
+                return this.handleMainPrograms(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in NodeHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown node tool: ${toolName}`);
+        }
+    }
+
+    async handleNodeContents(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const nodeContents = await this.adtclient.nodeContents(
+                args.parent_type,
+                args.parent_name,
+                args.user_name,
+                args.parent_tech_name,
+                args.rebuild_tree,
+                args.parentnodes
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            nodeContents
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get node contents: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleMainPrograms(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const mainPrograms = await this.adtclient.mainPrograms(args.includeUrl);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            mainPrograms
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get main programs: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

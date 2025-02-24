@@ -276,29 +276,29 @@ export class TransportHandlers extends BaseHandler {
             case 'hasTransportConfig':
                 return this.handleHasTransportConfig(args);
             case 'transportConfigurations':
-                return this.adtclient.transportConfigurations();
+                return this.handleTransportConfigurations(args);
             case 'getTransportConfiguration':
-                return this.adtclient.getTransportConfiguration(args.url);
+                return this.handleGetTransportConfiguration(args);
             case 'setTransportsConfig':
-                return this.adtclient.setTransportsConfig(args.uri, args.etag, args.config);
+                return this.handleSetTransportsConfig(args);
             case 'createTransportsConfig':
-                return this.adtclient.createTransportsConfig();
+                return this.handleCreateTransportsConfig(args);
             case 'userTransports':
-                return this.adtclient.userTransports(args.user, args.targets);
+                return this.handleUserTransports(args);
             case 'transportsByConfig':
-                return this.adtclient.transportsByConfig(args.configUri, args.targets);
+                return this.handleTransportsByConfig(args);
             case 'transportDelete':
-                return this.adtclient.transportDelete(args.transportNumber);
+                return this.handleTransportDelete(args);
             case 'transportRelease':
-                return this.adtclient.transportRelease(args.transportNumber, args.ignoreLocks, args.IgnoreATC);
+                return this.handleTransportRelease(args);
             case 'transportSetOwner':
-                return this.adtclient.transportSetOwner(args.transportNumber, args.targetuser);
+                return this.handleTransportSetOwner(args);
             case 'transportAddUser':
-                return this.adtclient.transportAddUser(args.transportNumber, args.user);
+                return this.handleTransportAddUser(args);
             case 'systemUsers':
-                return this.adtclient.systemUsers();
+                return this.handleSystemUsers(args);
             case 'transportReference':
-                return this.adtclient.transportReference(args.pgmid, args.obj_wbtype, args.obj_name, args.tr_number);
+                return this.handleTransportReference(args);
             default:
                 throw new McpError(ErrorCode.MethodNotFound, `Unknown transport tool: ${toolName}`);
         }
@@ -385,6 +385,306 @@ export class TransportHandlers extends BaseHandler {
             throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to check transport config: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportConfigurations(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const configurations = await this.adtclient.transportConfigurations();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            configurations
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get transport configurations: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleGetTransportConfiguration(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const configuration = await this.adtclient.getTransportConfiguration(args.url);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            configuration
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get transport configuration: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleSetTransportsConfig(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.setTransportsConfig(args.uri, args.etag, args.config);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to set transports config: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleCreateTransportsConfig(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.createTransportsConfig();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to create transports config: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleUserTransports(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const transports = await this.adtclient.userTransports(args.user, args.targets);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            transports
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get user transports: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportsByConfig(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const transports = await this.adtclient.transportsByConfig(args.configUri, args.targets);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            transports
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get transports by config: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportDelete(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.transportDelete(args.transportNumber);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to delete transport: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportRelease(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.transportRelease(args.transportNumber, args.ignoreLocks, args.IgnoreATC);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to release transport: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportSetOwner(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.transportSetOwner(args.transportNumber, args.targetuser);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to set transport owner: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportAddUser(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.transportAddUser(args.transportNumber, args.user);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to add user to transport: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleSystemUsers(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const users = await this.adtclient.systemUsers();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            users
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get system users: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTransportReference(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const reference = await this.adtclient.transportReference(args.pgmid, args.obj_wbtype, args.obj_name, args.tr_number);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            reference
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get transport reference: ${error.message || 'Unknown error'}`
             );
         }
     }

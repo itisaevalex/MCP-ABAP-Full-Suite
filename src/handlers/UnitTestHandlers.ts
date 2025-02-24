@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { UnitTestRunFlags } from 'abap-adt-api';
+import { ADTClient, UnitTestRunFlags } from 'abap-adt-api';
 
 export class UnitTestHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -88,22 +88,119 @@ export class UnitTestHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'unitTestRun':
-                const unitTestRunArgs: { url: string, flags?: UnitTestRunFlags } = arguments_;
-                return this.adtclient.unitTestRun(unitTestRunArgs.url, unitTestRunArgs.flags);
+                return this.handleUnitTestRun(args);
             case 'unitTestEvaluation':
-                const unitTestEvalArgs: { clas: any, flags?: UnitTestRunFlags } = arguments_;
-                return this.adtclient.unitTestEvaluation(unitTestEvalArgs.clas, unitTestEvalArgs.flags);
+                return this.handleUnitTestEvaluation(args);
             case 'unitTestOccurrenceMarkers':
-                const unitTestMarkersArgs: { url: string, source: string } = arguments_;
-                return this.adtclient.unitTestOccurrenceMarkers(unitTestMarkersArgs.url, unitTestMarkersArgs.source);
+                return this.handleUnitTestOccurrenceMarkers(args);
             case 'createTestInclude':
-                const createTestIncludeArgs: { clas: string, lockHandle: string, transport?: string } = arguments_;
-                return this.adtclient.createTestInclude(createTestIncludeArgs.clas, createTestIncludeArgs.lockHandle, createTestIncludeArgs.transport);
+                return this.handleCreateTestInclude(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in UnitTestHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown unit test tool: ${toolName}`);
+        }
+    }
+
+    async handleUnitTestRun(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.unitTestRun(args.url, args.flags);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to run unit test: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleUnitTestEvaluation(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.unitTestEvaluation(args.clas, args.flags);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to evaluate unit test: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleUnitTestOccurrenceMarkers(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const markers = await this.adtclient.unitTestOccurrenceMarkers(args.url, args.source);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            markers
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get unit test markers: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleCreateTestInclude(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.createTestInclude(args.clas, args.lockHandle, args.transport);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result,
+                            message: 'Test include created successfully'
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to create test include: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

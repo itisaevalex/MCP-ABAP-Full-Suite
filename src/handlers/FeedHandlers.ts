@@ -1,6 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { ADTClient } from "abap-adt-api";
 
 export class FeedHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -30,15 +31,64 @@ export class FeedHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'feeds':
-                return this.adtclient.feeds();
+                return this.handleFeeds(args);
             case 'dumps':
-                const dumpsArgs: { query?: string } = arguments_;
-                return this.adtclient.dumps(dumpsArgs.query);
+                return this.handleDumps(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in FeedHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown feed tool: ${toolName}`);
+        }
+    }
+
+    async handleFeeds(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const feeds = await this.adtclient.feeds();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            feeds
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get feeds: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDumps(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const dumps = await this.adtclient.dumps(args.query);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            dumps
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get dumps: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

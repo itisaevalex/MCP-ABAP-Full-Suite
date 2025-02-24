@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { ADTClient } from "abap-adt-api";
 
 export class ObjectDeletionHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -11,9 +12,19 @@ export class ObjectDeletionHandlers extends BaseHandler {
         inputSchema: {
           type: 'object',
           properties: {
-            objectUrl: { type: 'string' },
-            lockHandle: { type: 'string' },
-            transport: { type: 'string' }
+            objectUrl: { 
+              type: 'string',
+              description: 'URL of the object to delete'
+            },
+            lockHandle: { 
+              type: 'string',
+              description: 'Lock handle for the object'
+            },
+            transport: { 
+              type: 'string',
+              description: 'Transport request number',
+              optional: true
+            }
           },
           required: ['objectUrl', 'lockHandle']
         }
@@ -31,16 +42,6 @@ export class ObjectDeletionHandlers extends BaseHandler {
   }
 
   async handleDeleteObject(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectUrl: { type: 'string' },
-        lockHandle: { type: 'string' },
-        transport: { type: 'string' }
-      },
-      required: ['objectUrl', 'lockHandle']
-    });
-
     const startTime = performance.now();
     try {
       const result = await this.adtclient.deleteObject(
@@ -55,16 +56,19 @@ export class ObjectDeletionHandlers extends BaseHandler {
             type: 'text',
             text: JSON.stringify({
               status: 'success',
-              result
-            })
+              result,
+              message: 'Object deleted successfully'
+            }, null, 2)
           }
         ]
       };
     } catch (error: any) {
       this.trackRequest(startTime, false);
+      const errorMessage = error.message || 'Unknown error';
+      const detailedError = error.response?.data?.message || errorMessage;
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to delete object: ${error.message || 'Unknown error'}`
+        `Failed to delete object: ${detailedError}`
       );
     }
   }

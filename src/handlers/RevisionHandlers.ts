@@ -1,4 +1,4 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { AbapObjectStructure, classIncludes } from 'abap-adt-api';
@@ -28,13 +28,37 @@ export class RevisionHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'revisions':
-                const revisionsArgs: { objectUrl: string | AbapObjectStructure, clsInclude?: classIncludes } = arguments_;
-                return this.adtclient.revisions(revisionsArgs.objectUrl, revisionsArgs.clsInclude);
+                return this.handleRevisions(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in RevisionHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown revision tool: ${toolName}`);
+        }
+    }
+
+    async handleRevisions(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const revisions = await this.adtclient.revisions(args.objectUrl, args.clsInclude);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            revisions
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get revisions: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

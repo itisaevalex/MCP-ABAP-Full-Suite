@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { ServiceBinding } from 'abap-adt-api';
+import { ADTClient, ServiceBinding } from "abap-adt-api";
 
 export class ServiceBindingHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -49,7 +49,7 @@ export class ServiceBindingHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         binding: {
-                            type: 'string',
+                            type: 'object',
                             description: 'The service binding.'
                         },
                         index: {
@@ -64,19 +64,91 @@ export class ServiceBindingHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'publishServiceBinding':
-                const publishServiceBindingArgs: { name: string, version: string } = arguments_;
-                return this.adtclient.publishServiceBinding(publishServiceBindingArgs.name, publishServiceBindingArgs.version);
+                return this.handlePublishServiceBinding(args);
             case 'unPublishServiceBinding':
-                const unPublishServiceBindingArgs: { name: string, version: string } = arguments_;
-                return this.adtclient.unPublishServiceBinding(unPublishServiceBindingArgs.name, unPublishServiceBindingArgs.version);
+                return this.handleUnPublishServiceBinding(args);
             case 'bindingDetails':
-                const bindingDetailsArgs: { binding: ServiceBinding, index?: number } = arguments_;
-                return this.adtclient.bindingDetails(bindingDetailsArgs.binding, bindingDetailsArgs.index);
+                return this.handleBindingDetails(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in ServiceBindingHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown service binding tool: ${toolName}`);
+        }
+    }
+
+    async handlePublishServiceBinding(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.publishServiceBinding(args.name, args.version);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to publish service binding: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleUnPublishServiceBinding(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.unPublishServiceBinding(args.name, args.version);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to unpublish service binding: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleBindingDetails(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const details = await this.adtclient.bindingDetails(args.binding, args.index);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            details
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get binding details: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

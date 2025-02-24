@@ -64,13 +64,64 @@ export class QueryHandlers extends BaseHandler {
     async handle(toolName: string, arguments_: any): Promise<any> {
         switch (toolName) {
             case 'tableContents':
-                const tableContentsArgs: { ddicEntityName: string, rowNumber?: number, decode?: boolean, sqlQuery?: string } = arguments_;
-                return this.adtclient.tableContents(tableContentsArgs.ddicEntityName, tableContentsArgs.rowNumber, tableContentsArgs.decode, tableContentsArgs.sqlQuery);
+                return this.handleTableContents(arguments_);
             case 'runQuery':
-                const runQueryArgs: { sqlQuery: string, rowNumber?: number, decode?: boolean } = arguments_;
-                return this.adtclient.runQuery(runQueryArgs.sqlQuery, runQueryArgs.rowNumber, runQueryArgs.decode);
+                return this.handleRunQuery(arguments_);
             default:
                 throw new Error(`Tool ${toolName} not implemented in QueryHandlers`);
+        }
+    }
+
+    async handleTableContents(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.tableContents(
+                args.ddicEntityName,
+                args.rowNumber,
+                args.decode,
+                args.sqlQuery
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new Error(`Failed to retrieve table contents: ${error.message || 'Unknown error'}`);
+        }
+    }
+
+    async handleRunQuery(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.runQuery(
+                args.sqlQuery,
+                args.rowNumber,
+                args.decode
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new Error(`Failed to run query: ${error.message || 'Unknown error'}`);
         }
     }
 }

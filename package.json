@@ -7,7 +7,7 @@
     "typescript": "^5.7.3"
   },
   "name": "mcp-abap-abap-adt-api",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "main": "index.js",
   "scripts": {
     "test": "jest",

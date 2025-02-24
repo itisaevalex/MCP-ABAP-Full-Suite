@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { PrettyPrinterStyle } from 'abap-adt-api';
+import { ADTClient } from "abap-adt-api";
 
 export class PrettyPrinterHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -45,56 +45,95 @@ export class PrettyPrinterHandlers extends BaseHandler {
                     },
                     required: ['source']
                 }
-            },
-            {
-                name: 'typeHierarchy',
-                description: 'Retrieves the type hierarchy for a given object.',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        url: {
-                            type: 'string',
-                            description: 'The URL of the object.'
-                        },
-                        body: {
-                            type: 'string',
-                            description: 'The request body.'
-                        },
-                        line: {
-                            type: 'number',
-                            description: 'The line number.'
-                        },
-                        offset: {
-                            type: 'number',
-                            description: 'The offset.'
-                        },
-                        superTypes: {
-                            type: 'boolean',
-                            description: 'Whether to include supertypes.',
-                            optional: true
-                        }
-                    },
-                    required: ['url', 'body', 'line', 'offset']
-                }
             }
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'prettyPrinterSetting':
-                return this.adtclient.prettyPrinterSetting();
+                return this.handlePrettyPrinterSetting(args);
             case 'setPrettyPrinterSetting':
-                const setPrettyPrinterSettingArgs: { indent: boolean, style: PrettyPrinterStyle } = arguments_;
-                return this.adtclient.setPrettyPrinterSetting(setPrettyPrinterSettingArgs.indent, setPrettyPrinterSettingArgs.style);
+                return this.handleSetPrettyPrinterSetting(args);
             case 'prettyPrinter':
-                const prettyPrinterArgs: { source: string } = arguments_;
-                return this.adtclient.prettyPrinter(prettyPrinterArgs.source);
-            case 'typeHierarchy':
-                const typeHierarchyArgs: { url: string, body: string, line: number, offset: number, superTypes?: boolean } = arguments_;
-                return this.adtclient.typeHierarchy(typeHierarchyArgs.url, typeHierarchyArgs.body, typeHierarchyArgs.line, typeHierarchyArgs.offset, typeHierarchyArgs.superTypes);
+                return this.handlePrettyPrinter(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in PrettyPrinterHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown pretty printer tool: ${toolName}`);
+        }
+    }
+
+    async handlePrettyPrinterSetting(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const settings = await this.adtclient.prettyPrinterSetting();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            settings
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get pretty printer settings: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleSetPrettyPrinterSetting(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.setPrettyPrinterSetting(args.indent, args.style);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to set pretty printer settings: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handlePrettyPrinter(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const source = await this.adtclient.prettyPrinter(args.source);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            source
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to format ABAP code: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

@@ -1,4 +1,4 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { DebuggingMode, DebuggerScope, DebugBreakpoint, DebugSettings } from 'abap-adt-api';
@@ -160,7 +160,7 @@ export class DebugHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         breakpoint: {
-                            type: 'string',
+                            type: 'object',
                             description: 'The breakpoint to delete.'
                         },
                         debuggingMode: {
@@ -325,37 +325,402 @@ export class DebugHandlers extends BaseHandler {
         ];
     }
 
-    // Simplified handle method using "any" for arguments
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'debuggerListeners':
-                return this.adtclient.debuggerListeners(arguments_.debuggingMode, arguments_.terminalId, arguments_.ideId, arguments_.user, arguments_.checkConflict);
+                return this.handleDebuggerListeners(args);
             case 'debuggerListen':
-                return this.adtclient.debuggerListen(arguments_.debuggingMode, arguments_.terminalId, arguments_.ideId, arguments_.user, arguments_.checkConflict, arguments_.isNotifiedOnConflict);
+                return this.handleDebuggerListen(args);
             case 'debuggerDeleteListener':
-                return this.adtclient.debuggerDeleteListener(arguments_.debuggingMode, arguments_.terminalId, arguments_.ideId, arguments_.user);
+                return this.handleDebuggerDeleteListener(args);
             case 'debuggerSetBreakpoints':
-                return this.adtclient.debuggerSetBreakpoints(arguments_.debuggingMode, arguments_.terminalId, arguments_.ideId, arguments_.clientId, arguments_.breakpoints, arguments_.user, arguments_.scope, arguments_.systemDebugging, arguments_.deactivated, arguments_.syncScupeUrl);
+                return this.handleDebuggerSetBreakpoints(args);
             case 'debuggerDeleteBreakpoints':
-                return this.adtclient.debuggerDeleteBreakpoints(arguments_.breakpoint, arguments_.debuggingMode, arguments_.terminalId, arguments_.ideId, arguments_.requestUser, arguments_.scope);
+                return this.handleDebuggerDeleteBreakpoints(args);
             case 'debuggerAttach':
-                return this.adtclient.debuggerAttach(arguments_.debuggingMode, arguments_.debuggeeId, arguments_.user, arguments_.dynproDebugging);
+                return this.handleDebuggerAttach(args);
             case 'debuggerSaveSettings':
-                return this.adtclient.debuggerSaveSettings(arguments_.settings);
+                return this.handleDebuggerSaveSettings(args);
             case 'debuggerStackTrace':
-                return this.adtclient.debuggerStackTrace(arguments_.semanticURIs);
+                return this.handleDebuggerStackTrace(args);
             case 'debuggerVariables':
-                return this.adtclient.debuggerVariables(arguments_.parents);
+                return this.handleDebuggerVariables(args);
             case 'debuggerChildVariables':
-                return this.adtclient.debuggerChildVariables(arguments_.parent);
+                return this.handleDebuggerChildVariables(args);
             case 'debuggerStep':
-                return this.adtclient.debuggerStep(arguments_.steptype, arguments_.url);
+                return this.handleDebuggerStep(args);
             case 'debuggerGoToStack':
-                return this.adtclient.debuggerGoToStack(arguments_.urlOrPosition);
+                return this.handleDebuggerGoToStack(args);
             case 'debuggerSetVariableValue':
-                return this.adtclient.debuggerSetVariableValue(arguments_.variableName, arguments_.value);
+                return this.handleDebuggerSetVariableValue(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in DebugHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown debug tool: ${toolName}`);
+        }
+    }
+
+    async handleDebuggerListeners(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerListeners(
+                args.debuggingMode,
+                args.terminalId,
+                args.ideId,
+                args.user,
+                args.checkConflict
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get debugger listeners: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerListen(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerListen(
+                args.debuggingMode,
+                args.terminalId,
+                args.ideId,
+                args.user,
+                args.checkConflict,
+                args.isNotifiedOnConflict
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to start debugger listener: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerDeleteListener(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerDeleteListener(
+                args.debuggingMode,
+                args.terminalId,
+                args.ideId,
+                args.user
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to delete debugger listener: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerSetBreakpoints(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerSetBreakpoints(
+                args.debuggingMode,
+                args.terminalId,
+                args.ideId,
+                args.clientId,
+                args.breakpoints,
+                args.user,
+                args.scope,
+                args.systemDebugging,
+                args.deactivated,
+                args.syncScupeUrl
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to set breakpoints: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerDeleteBreakpoints(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerDeleteBreakpoints(
+                args.breakpoint,
+                args.debuggingMode,
+                args.terminalId,
+                args.ideId,
+                args.requestUser,
+                args.scope
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to delete breakpoints: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerAttach(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerAttach(
+                args.debuggingMode,
+                args.debuggeeId,
+                args.user,
+                args.dynproDebugging
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to attach debugger: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerSaveSettings(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerSaveSettings(args.settings);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to save debugger settings: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerStackTrace(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerStackTrace(args.semanticURIs);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get stack trace: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerVariables(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerVariables(args.parents);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get variables: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerChildVariables(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerChildVariables(args.parent);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get child variables: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerStep(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerStep(args.steptype, args.url);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to perform debug step: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerGoToStack(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerGoToStack(args.urlOrPosition);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to go to stack position: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDebuggerSetVariableValue(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.debuggerSetVariableValue(args.variableName, args.value);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to set variable value: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

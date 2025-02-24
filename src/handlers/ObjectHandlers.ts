@@ -81,6 +81,7 @@ export class ObjectHandlers extends BaseHandler {
             }
         ];
     }
+
     async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'objectStructure':
@@ -90,9 +91,9 @@ export class ObjectHandlers extends BaseHandler {
             case 'searchObject':
                 return this.handleSearchObject(args);
             case 'objectTypes':
-                return this.adtclient.objectTypes();
+                return this.handleObjectTypes(args);
             case 'reentranceTicket':
-                return this.adtclient.reentranceTicket();
+                return this.handleReentranceTicket(args);
             default:
                 throw new McpError(ErrorCode.MethodNotFound, `Unknown object tool: ${toolName}`);
         }
@@ -104,19 +105,24 @@ export class ObjectHandlers extends BaseHandler {
             const structure = await this.adtclient.objectStructure(args.objectUrl, args.version);
             this.trackRequest(startTime, true);
             return {
-                content: [{
-                    type: 'text',
-                    text: JSON.stringify({
-                        status: 'success',
-                        structure
-                    })
-                }]
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            structure,
+                            message: 'Object structure retrieved successfully'
+                        }, null, 2)
+                    }
+                ]
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
+            const errorMessage = error.message || 'Unknown error';
+            const detailedError = error.response?.data?.message || errorMessage;
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get object structure: ${error.message || 'Unknown error'}`
+                `Failed to get object structure: ${detailedError}`
             );
         }
     }
@@ -127,19 +133,24 @@ export class ObjectHandlers extends BaseHandler {
             const path = await this.adtclient.findObjectPath(args.objectUrl);
             this.trackRequest(startTime, true);
             return {
-                content: [{
-                    type: 'text',
-                    text: JSON.stringify({
-                        status: 'success',
-                        path
-                    })
-                }]
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            path,
+                            message: 'Object path found successfully'
+                        }, null, 2)
+                    }
+                ]
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
+            const errorMessage = error.message || 'Unknown error';
+            const detailedError = error.response?.data?.message || errorMessage;
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to find object path: ${error.message || 'Unknown error'}`
+                `Failed to find object path: ${detailedError}`
             );
         }
     }
@@ -154,19 +165,80 @@ export class ObjectHandlers extends BaseHandler {
             );
             this.trackRequest(startTime, true);
             return {
-                content: [{
-                    type: 'text',
-                    text: JSON.stringify({
-                        status: 'success',
-                        results
-                    })
-                }]
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            results,
+                            message: 'Object search completed successfully'
+                        }, null, 2)
+                    }
+                ]
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
+            const errorMessage = error.message || 'Unknown error';
+            const detailedError = error.response?.data?.message || errorMessage;
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to search objects: ${error.message || 'Unknown error'}`
+                `Failed to search objects: ${detailedError}`
+            );
+        }
+    }
+
+    async handleObjectTypes(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const types = await this.adtclient.objectTypes();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            types,
+                            message: 'Object types retrieved successfully'
+                        }, null, 2)
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            const errorMessage = error.message || 'Unknown error';
+            const detailedError = error.response?.data?.message || errorMessage;
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get object types: ${detailedError}`
+            );
+        }
+    }
+
+    async handleReentranceTicket(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const ticket = await this.adtclient.reentranceTicket();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            ticket,
+                            message: 'Reentrance ticket retrieved successfully'
+                        }, null, 2)
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            const errorMessage = error.message || 'Unknown error';
+            const detailedError = error.response?.data?.message || errorMessage;
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get reentrance ticket: ${detailedError}`
             );
         }
     }

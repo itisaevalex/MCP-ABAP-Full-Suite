@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { Range, ExtractMethodProposal, GenericRefactoring } from 'abap-adt-api';
+import { ADTClient, Range, ExtractMethodProposal, GenericRefactoring } from 'abap-adt-api';
 
 export class RefactorHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -55,19 +55,91 @@ export class RefactorHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'extractMethodEvaluate':
-                const extractMethodEvaluateArgs: { uri: string, range: Range } = arguments_;
-                return this.adtclient.extractMethodEvaluate(extractMethodEvaluateArgs.uri, extractMethodEvaluateArgs.range);
+                return this.handleExtractMethodEvaluate(args);
             case 'extractMethodPreview':
-                const extractMethodPreviewArgs: { proposal: ExtractMethodProposal } = arguments_;
-                return this.adtclient.extractMethodPreview(extractMethodPreviewArgs.proposal);
+                return this.handleExtractMethodPreview(args);
             case 'extractMethodExecute':
-                const extractMethodExecuteArgs: { refactoring: GenericRefactoring } = arguments_;
-                return this.adtclient.extractMethodExecute(extractMethodExecuteArgs.refactoring);
+                return this.handleExtractMethodExecute(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in RefactorHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown refactor tool: ${toolName}`);
+        }
+    }
+
+    async handleExtractMethodEvaluate(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.extractMethodEvaluate(args.uri, args.range);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to evaluate extract method: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleExtractMethodPreview(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.extractMethodPreview(args.proposal);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to preview extract method: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleExtractMethodExecute(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.extractMethodExecute(args.refactoring);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to execute extract method: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

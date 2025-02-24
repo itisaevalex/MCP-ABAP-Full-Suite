@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler';
-import type { ToolDefinition } from '../types/tools';
+import { BaseHandler } from './BaseHandler.js';
+import type { ToolDefinition } from '../types/tools.js';
+import { ADTClient } from "abap-adt-api";
 
 export class ObjectLockHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -10,8 +11,15 @@ export class ObjectLockHandlers extends BaseHandler {
       inputSchema: {
         type: 'object',
         properties: {
-          objectUrl: { type: 'string' },
-          accessMode: { type: 'string', optional: true }
+          objectUrl: { 
+            type: 'string',
+            description: 'URL of the object to lock'
+          },
+          accessMode: { 
+            type: 'string',
+            description: 'Access mode for the lock',
+            optional: true 
+          }
         },
         required: ['objectUrl']
       }
@@ -21,8 +29,14 @@ export class ObjectLockHandlers extends BaseHandler {
       inputSchema: {
         type: 'object',
         properties: {
-          objectUrl: { type: 'string' },
-          lockHandle: { type: 'string' }
+          objectUrl: { 
+            type: 'string',
+            description: 'URL of the object to unlock'
+          },
+          lockHandle: { 
+            type: 'string',
+            description: 'Lock handle obtained from previous lock operation'
+          }
         },
         required: ['objectUrl', 'lockHandle']
       }
@@ -31,24 +45,15 @@ export class ObjectLockHandlers extends BaseHandler {
   async handle(toolName: string, args: any): Promise<any> {
     switch (toolName) {
       case 'lock':
-        return this.lock(args);
+        return this.handleLock(args);
       case 'unLock':
-        return this.unlock(args);
+        return this.handleUnlock(args);
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown object lock tool: ${toolName}`);
     }
   }
 
-  async lock(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectUrl: { type: 'string' },
-        accessMode: { type: 'string' }
-      },
-      required: ['objectUrl']
-    });
-    
+  async handleLock(args: any): Promise<any> {
     const startTime = performance.now();
     try {
       const lockResult = await this.adtclient.lock(args.objectUrl, args.accessMode);
@@ -59,8 +64,8 @@ export class ObjectLockHandlers extends BaseHandler {
             type: 'text',
             text: JSON.stringify({
               status: 'success',
-              locked: true,
-              lockHandle: lockResult.LOCK_HANDLE
+              lockHandle: lockResult.LOCK_HANDLE,
+              message: 'Object locked successfully'
             })
           }
         ]
@@ -74,16 +79,7 @@ export class ObjectLockHandlers extends BaseHandler {
     }
   }
 
-  async unlock(args: any): Promise<any> {
-    this.validateArgs(args, {
-      type: 'object',
-      properties: {
-        objectUrl: { type: 'string' },
-        lockHandle: { type: 'string' }
-      },
-      required: ['objectUrl', 'lockHandle']
-    });
-    
+  async handleUnlock(args: any): Promise<any> {
     const startTime = performance.now();
     try {
       await this.adtclient.unLock(args.objectUrl, args.lockHandle);
@@ -94,7 +90,7 @@ export class ObjectLockHandlers extends BaseHandler {
             type: 'text',
             text: JSON.stringify({
               status: 'success',
-              unlocked: true
+              message: 'Object unlocked successfully'
             })
           }
         ]

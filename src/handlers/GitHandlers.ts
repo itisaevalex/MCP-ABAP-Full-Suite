@@ -1,4 +1,4 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { GitRepo, GitStaging } from 'abap-adt-api';
@@ -131,8 +131,8 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'string',
-                            description: 'The Git repository.'
+                            type: 'object',
+                            description: 'The Git repository object.'
                         },
                         user: {
                             type: 'string',
@@ -155,12 +155,12 @@ export class GitHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         repo: {
-                            type: 'string',
-                            description: 'The Git repository.'
+                            type: 'object',
+                            description: 'The Git repository object.'
                         },
                         staging: {
-                            type: 'string',
-                            description: 'The staging information.'
+                            type: 'object',
+                            description: 'The staging information object.'
                         },
                         user: {
                             type: 'string',
@@ -260,39 +260,320 @@ export class GitHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'gitRepos':
-                return this.adtclient.gitRepos();
+                return this.handleGitRepos(args);
             case 'gitExternalRepoInfo':
-                const gitExternalRepoInfoArgs: { repourl: string, user?: string, password?: string } = arguments_;
-                return this.adtclient.gitExternalRepoInfo(gitExternalRepoInfoArgs.repourl, gitExternalRepoInfoArgs.user, gitExternalRepoInfoArgs.password);
+                return this.handleGitExternalRepoInfo(args);
             case 'gitCreateRepo':
-                const gitCreateRepoArgs: { packageName: string, repourl: string, branch?: string, transport?: string, user?: string, password?: string } = arguments_;
-                return this.adtclient.gitCreateRepo(gitCreateRepoArgs.packageName, gitCreateRepoArgs.repourl, gitCreateRepoArgs.branch, gitCreateRepoArgs.transport, gitCreateRepoArgs.user, gitCreateRepoArgs.password);
+                return this.handleGitCreateRepo(args);
             case 'gitPullRepo':
-                const gitPullRepoArgs: { repoId: string, branch?: string, transport?: string, user?: string, password?: string } = arguments_;
-                return this.adtclient.gitPullRepo(gitPullRepoArgs.repoId, gitPullRepoArgs.branch, gitPullRepoArgs.transport, gitPullRepoArgs.user, gitPullRepoArgs.password);
+                return this.handleGitPullRepo(args);
             case 'gitUnlinkRepo':
-                const gitUnlinkRepoArgs: { repoId: string } = arguments_;
-                return this.adtclient.gitUnlinkRepo(gitUnlinkRepoArgs.repoId);
+                return this.handleGitUnlinkRepo(args);
             case 'stageRepo':
-                const stageRepoArgs: { repo: GitRepo, user?: string, password?: string } = arguments_;
-                return this.adtclient.stageRepo(stageRepoArgs.repo, stageRepoArgs.user, stageRepoArgs.password);
+                return this.handleStageRepo(args);
             case 'pushRepo':
-                const pushRepoArgs: { repo: GitRepo, staging: GitStaging, user?: string, password?: string } = arguments_;
-                return this.adtclient.pushRepo(pushRepoArgs.repo, pushRepoArgs.staging, pushRepoArgs.user, pushRepoArgs.password);
+                return this.handlePushRepo(args);
             case 'checkRepo':
-                const checkRepoArgs: { repo: GitRepo, user?: string, password?: string } = arguments_;
-                return this.adtclient.checkRepo(checkRepoArgs.repo, checkRepoArgs.user, checkRepoArgs.password);
+                return this.handleCheckRepo(args);
             case 'remoteRepoInfo':
-                const remoteRepoInfoArgs: { repo: GitRepo, user?: string, password?: string } = arguments_;
-                return this.adtclient.remoteRepoInfo(remoteRepoInfoArgs.repo, remoteRepoInfoArgs.user, remoteRepoInfoArgs.password);
+                return this.handleRemoteRepoInfo(args);
             case 'switchRepoBranch':
-                const switchRepoBranchArgs: { repo: GitRepo, branch: string, create?: boolean, user?: string, password?: string } = arguments_;
-                return this.adtclient.switchRepoBranch(switchRepoBranchArgs.repo, switchRepoBranchArgs.branch, switchRepoBranchArgs.create, switchRepoBranchArgs.user, switchRepoBranchArgs.password);
+                return this.handleSwitchRepoBranch(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in GitHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown git tool: ${toolName}`);
+        }
+    }
+
+    async handleGitRepos(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const repos = await this.adtclient.gitRepos();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            repos
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get git repos: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleGitExternalRepoInfo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const repoInfo = await this.adtclient.gitExternalRepoInfo(
+                args.repourl,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            repoInfo
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get external repo info: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleGitCreateRepo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.gitCreateRepo(
+                args.packageName,
+                args.repourl,
+                args.branch,
+                args.transport,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to create git repo: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleGitPullRepo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.gitPullRepo(
+                args.repoId,
+                args.branch,
+                args.transport,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to pull git repo: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleGitUnlinkRepo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.gitUnlinkRepo(args.repoId);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to unlink git repo: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleStageRepo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.stageRepo(
+                args.repo,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to stage repo: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handlePushRepo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.pushRepo(
+                args.repo,
+                args.staging,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to push repo: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleCheckRepo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.checkRepo(
+                args.repo,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to check repo: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleRemoteRepoInfo(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const repoInfo = await this.adtclient.remoteRepoInfo(
+                args.repo,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            repoInfo
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get remote repo info: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleSwitchRepoBranch(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.switchRepoBranch(
+                args.repo,
+                args.branch,
+                args.create,
+                args.user,
+                args.password
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to switch repo branch: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

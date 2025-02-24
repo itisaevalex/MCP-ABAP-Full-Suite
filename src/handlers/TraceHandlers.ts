@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { TraceStatementOptions, TraceParameters, TracesCreationConfig } from 'abap-adt-api';
+import { ADTClient, TraceStatementOptions, TraceParameters, TracesCreationConfig } from 'abap-adt-api';
 
 export class TraceHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -150,37 +150,253 @@ export class TraceHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'tracesList':
-                const tracesListArgs: { user?: string } = arguments_;
-                return this.adtclient.tracesList(tracesListArgs.user);
+                return this.handleTracesList(args);
             case 'tracesListRequests':
-                const tracesListRequestsArgs: { user?: string } = arguments_;
-                return this.adtclient.tracesListRequests(tracesListRequestsArgs.user);
+                return this.handleTracesListRequests(args);
             case 'tracesHitList':
-                const tracesHitListArgs: { id: string, withSystemEvents?: boolean } = arguments_;
-                return this.adtclient.tracesHitList(tracesHitListArgs.id, tracesHitListArgs.withSystemEvents);
+                return this.handleTracesHitList(args);
             case 'tracesDbAccess':
-                const tracesDbAccessArgs: { id: string, withSystemEvents?: boolean } = arguments_;
-                return this.adtclient.tracesDbAccess(tracesDbAccessArgs.id, tracesDbAccessArgs.withSystemEvents);
+                return this.handleTracesDbAccess(args);
             case 'tracesStatements':
-                const tracesStatementsArgs: { id: string, options?: TraceStatementOptions } = arguments_;
-                return this.adtclient.tracesStatements(tracesStatementsArgs.id, tracesStatementsArgs.options);
+                return this.handleTracesStatements(args);
             case 'tracesSetParameters':
-                const tracesSetParametersArgs: { parameters: TraceParameters } = arguments_;
-                return this.adtclient.tracesSetParameters(tracesSetParametersArgs.parameters);
+                return this.handleTracesSetParameters(args);
             case 'tracesCreateConfiguration':
-                const tracesCreateConfigurationArgs: { config: TracesCreationConfig } = arguments_;
-                return this.adtclient.tracesCreateConfiguration(tracesCreateConfigurationArgs.config);
+                return this.handleTracesCreateConfiguration(args);
             case 'tracesDeleteConfiguration':
-                const tracesDeleteConfigurationArgs: { id: string } = arguments_;
-                return this.adtclient.tracesDeleteConfiguration(tracesDeleteConfigurationArgs.id);
+                return this.handleTracesDeleteConfiguration(args);
             case 'tracesDelete':
-                const tracesDeleteArgs: { id: string } = arguments_;
-                return this.adtclient.tracesDelete(tracesDeleteArgs.id);
+                return this.handleTracesDelete(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in TraceHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown trace tool: ${toolName}`);
+        }
+    }
+
+    async handleTracesList(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const traces = await this.adtclient.tracesList(args.user);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            traces
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get traces list: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesListRequests(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const requests = await this.adtclient.tracesListRequests(args.user);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            requests
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get trace requests: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesHitList(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const hitList = await this.adtclient.tracesHitList(args.id, args.withSystemEvents);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            hitList
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get trace hit list: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesDbAccess(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const dbAccess = await this.adtclient.tracesDbAccess(args.id, args.withSystemEvents);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            dbAccess
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get trace DB access: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesStatements(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const statements = await this.adtclient.tracesStatements(args.id, args.options);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            statements
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get trace statements: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesSetParameters(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.tracesSetParameters(args.parameters);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to set trace parameters: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesCreateConfiguration(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.tracesCreateConfiguration(args.config);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to create trace configuration: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesDeleteConfiguration(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.tracesDeleteConfiguration(args.id);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to delete trace configuration: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleTracesDelete(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.tracesDelete(args.id);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to delete trace: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

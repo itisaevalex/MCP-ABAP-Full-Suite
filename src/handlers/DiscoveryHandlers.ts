@@ -1,4 +1,4 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 
@@ -82,24 +82,199 @@ export class DiscoveryHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'featureDetails':
-                return this.adtclient.featureDetails(arguments_.title);
+                return this.handleFeatureDetails(args);
             case 'collectionFeatureDetails':
-                return this.adtclient.collectionFeatureDetails(arguments_.url);
+                return this.handleCollectionFeatureDetails(args);
             case 'findCollectionByUrl':
-                return this.adtclient.findCollectionByUrl(arguments_.url);
+                return this.handleFindCollectionByUrl(args);
             case 'loadTypes':
-                return this.adtclient.loadTypes();
+                return this.handleLoadTypes(args);
             case 'adtDiscovery':
-                return this.adtclient.adtDiscovery();
+                return this.handleAdtDiscovery(args);
             case 'adtCoreDiscovery':
-                return this.adtclient.adtCoreDiscovery();
+                return this.handleAdtCoreDiscovery(args);
             case 'adtCompatibiliyGraph':
-                return this.adtclient.adtCompatibiliyGraph();
+                return this.handleAdtCompatibilityGraph(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in DiscoveryHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown discovery tool: ${toolName}`);
+        }
+    }
+
+    async handleFeatureDetails(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const details = await this.adtclient.featureDetails(args.title);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            details
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get feature details: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleCollectionFeatureDetails(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const details = await this.adtclient.collectionFeatureDetails(args.url);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            details
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get collection feature details: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleFindCollectionByUrl(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const collection = await this.adtclient.findCollectionByUrl(args.url);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            collection
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to find collection by URL: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleLoadTypes(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const types = await this.adtclient.loadTypes();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            types
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to load types: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleAdtDiscovery(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const discovery = await this.adtclient.adtDiscovery();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            discovery
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to perform ADT discovery: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleAdtCoreDiscovery(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const discovery = await this.adtclient.adtCoreDiscovery();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            discovery
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to perform ADT core discovery: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleAdtCompatibilityGraph(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const graph = await this.adtclient.adtCompatibiliyGraph();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            graph
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get ADT compatibility graph: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

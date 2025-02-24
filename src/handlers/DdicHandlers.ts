@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { PackageValueHelpType } from 'abap-adt-api';
+import { ADTClient, PackageValueHelpType } from 'abap-adt-api';
 
 export class DdicHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -79,21 +79,123 @@ export class DdicHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'annotationDefinitions':
-                return this.adtclient.annotationDefinitions();
+                return this.handleAnnotationDefinitions(args);
             case 'ddicElement':
-                const ddicElementArgs: { path: string | string[], getTargetForAssociation?: boolean, getExtensionViews?: boolean, getSecondaryObjects?: boolean } = arguments_;
-                return this.adtclient.ddicElement(ddicElementArgs.path, ddicElementArgs.getTargetForAssociation, ddicElementArgs.getExtensionViews, ddicElementArgs.getSecondaryObjects);
+                return this.handleDdicElement(args);
             case 'ddicRepositoryAccess':
-                const ddicRepositoryAccessArgs: { path: string | string[] } = arguments_;
-                return this.adtclient.ddicRepositoryAccess(ddicRepositoryAccessArgs.path);
+                return this.handleDdicRepositoryAccess(args);
             case 'packageSearchHelp':
-                const packageSearchHelpArgs: { type: PackageValueHelpType, name?: string } = arguments_;
-                return this.adtclient.packageSearchHelp(packageSearchHelpArgs.type, packageSearchHelpArgs.name);
+                return this.handlePackageSearchHelp(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in DdicHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown DDIC tool: ${toolName}`);
+        }
+    }
+
+    async handleAnnotationDefinitions(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.annotationDefinitions();
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get annotation definitions: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDdicElement(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.ddicElement(
+                args.path,
+                args.getTargetForAssociation,
+                args.getExtensionViews,
+                args.getSecondaryObjects
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get DDIC element: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleDdicRepositoryAccess(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.ddicRepositoryAccess(args.path);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to access DDIC repository: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handlePackageSearchHelp(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.packageSearchHelp(args.type, args.name);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to get package search help: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }

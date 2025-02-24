@@ -1,7 +1,7 @@
-import { ADTClient } from 'abap-adt-api';
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { RenameRefactoringProposal, RenameRefactoring } from 'abap-adt-api';
+import { ADTClient, RenameRefactoringProposal, RenameRefactoring } from 'abap-adt-api';
 
 export class RenameHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -39,7 +39,7 @@ export class RenameHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         renameRefactoring: {
-                            type: 'string',
+                            type: 'object',
                             description: 'The rename refactoring proposal.'
                         },
                         transport: {
@@ -58,7 +58,7 @@ export class RenameHandlers extends BaseHandler {
                     type: 'object',
                     properties: {
                         refactoring: {
-                            type: 'string',
+                            type: 'object',
                             description: 'The rename refactoring.'
                         }
                     },
@@ -68,19 +68,99 @@ export class RenameHandlers extends BaseHandler {
         ];
     }
 
-    async handle(toolName: string, arguments_: any): Promise<any> {
+    async handle(toolName: string, args: any): Promise<any> {
         switch (toolName) {
             case 'renameEvaluate':
-                const renameEvaluateArgs: { uri: string, line: number, startColumn: number, endColumn: number } = arguments_;
-                return this.adtclient.renameEvaluate(renameEvaluateArgs.uri, renameEvaluateArgs.line, renameEvaluateArgs.startColumn, renameEvaluateArgs.endColumn);
+                return this.handleRenameEvaluate(args);
             case 'renamePreview':
-                const renamePreviewArgs: { renameRefactoring: RenameRefactoringProposal, transport?: string } = arguments_;
-                return this.adtclient.renamePreview(renamePreviewArgs.renameRefactoring, renamePreviewArgs.transport);
+                return this.handleRenamePreview(args);
             case 'renameExecute':
-                const renameExecuteArgs: { refactoring: RenameRefactoring } = arguments_;
-                return this.adtclient.renameExecute(renameExecuteArgs.refactoring);
+                return this.handleRenameExecute(args);
             default:
-                throw new Error(`Tool ${toolName} not implemented in RenameHandlers`);
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown rename tool: ${toolName}`);
+        }
+    }
+
+    async handleRenameEvaluate(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.renameEvaluate(
+                args.uri,
+                args.line,
+                args.startColumn,
+                args.endColumn
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to evaluate rename: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleRenamePreview(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.renamePreview(
+                args.renameRefactoring,
+                args.transport
+            );
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to preview rename: ${error.message || 'Unknown error'}`
+            );
+        }
+    }
+
+    async handleRenameExecute(args: any): Promise<any> {
+        const startTime = performance.now();
+        try {
+            const result = await this.adtclient.renameExecute(args.refactoring);
+            this.trackRequest(startTime, true);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            status: 'success',
+                            result
+                        })
+                    }
+                ]
+            };
+        } catch (error: any) {
+            this.trackRequest(startTime, false);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Failed to execute rename: ${error.message || 'Unknown error'}`
+            );
         }
     }
 }
