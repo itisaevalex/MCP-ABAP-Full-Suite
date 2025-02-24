@@ -226,6 +226,18 @@ export class AbapAdtServer extends Server {
             case 'transportInfo':
             case 'createTransport':
             case 'hasTransportConfig':
+            case 'transportConfigurations':
+            case 'getTransportConfiguration':
+            case 'setTransportsConfig':
+            case 'createTransportsConfig':
+            case 'userTransports':
+            case 'transportsByConfig':
+            case 'transportDelete':
+            case 'transportRelease':
+            case 'transportSetOwner':
+            case 'transportAddUser':
+            case 'systemUsers':
+            case 'transportReference':
                 result = await this.transportHandlers.handle(request.params.name, request.params.arguments);
                 break;
             case 'lock':
@@ -298,7 +310,6 @@ export class AbapAdtServer extends Server {
             case 'prettyPrinterSetting':
             case 'setPrettyPrinterSetting':
             case 'prettyPrinter':
-            case 'typeHierarchy':
                 result = await this.prettyPrinterHandlers.handle(request.params.name, request.params.arguments);
                 break;
             case 'gitRepos':
