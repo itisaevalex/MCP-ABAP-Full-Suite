@@ -1,3 +1,5 @@
+DISCLAIMER: This server is still in experimental status! Use it with caution!
+
 # ABAP-ADT-API MCP-Server
 
 [![smithery badge](https://smithery.ai/badge/@mario-andreschak/mcp-abap-abap-adt-api)](https://smithery.ai/server/@mario-andreschak/mcp-abap-abap-adt-api)
