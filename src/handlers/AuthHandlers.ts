@@ -1,8 +1,16 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler.js';
-import type { ToolDefinition } from '../types/tools.js';
+import { BaseHandler } from './BaseHandler';
+import type { ToolDefinition } from '../types/tools';
+import { ADTClient } from "abap-adt-api";
 
 export class AuthHandlers extends BaseHandler {
+  private isBtpConnectionGetter: () => boolean;
+
+  constructor(adtclient: ADTClient, isBtpConnectionGetter: () => boolean) {
+    super(adtclient);
+    this.isBtpConnectionGetter = isBtpConnectionGetter;
+  }
+
   getTools(): ToolDefinition[] {
     return [
       {
@@ -46,6 +54,42 @@ export class AuthHandlers extends BaseHandler {
   }
 
   private async handleLogin(args: any) {
+    if (this.isBtpConnectionGetter()) {
+      console.log('AuthHandlers: BTP connection detected for login. Performing health check...');
+      const startTime = performance.now();
+      try {
+        await this.adtclient.getObjectSource('/sap/bc/adt/repository/nodestructure/DEV/CLAS/SOME_NON_EXISTENT_OBJECT');
+        this.trackRequest(startTime, true);
+        console.log('AuthHandlers: BTP health check successful.');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ status: 'BTP OAuth connection active and healthy' })
+            }
+          ]
+        };
+      } catch (error: any) {
+        this.trackRequest(startTime, false);
+        if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
+            console.error('AuthHandlers: BTP health check failed due to authorization issue.', error);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `BTP OAuth token validation failed: ${error.message || 'Unknown error'}`
+            );
+        }
+        console.log('AuthHandlers: BTP health check completed (expected error for non-existent object).', error.message);
+        return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ status: 'BTP OAuth connection active (health check indicates auth OK)' })
+              }
+            ]
+          };
+      }
+    }
+
     const startTime = performance.now();
     try {
       const loginResult = await this.adtclient.login();
