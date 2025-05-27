@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler.js';
-import type { ToolDefinition } from '../types/tools.js';
-import { ADTClient } from "abap-adt-api";
+import { BaseHandler } from './BaseHandler';
+import type { ToolDefinition } from '../types/tools';
+import { ADTClient, AdtLock } from "abap-adt-api";
 
 export class ObjectLockHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {

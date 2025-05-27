@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler.js';
-import type { ToolDefinition } from '../types/tools.js';
-import { ADTClient } from "abap-adt-api";
+import { BaseHandler } from './BaseHandler';
+import type { ToolDefinition } from '../types/tools';
+import { ADTClient, PrettyPrinterSettings, PrettyPrinterStyle } from 'abap-adt-api';
 
 export class PrettyPrinterHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {

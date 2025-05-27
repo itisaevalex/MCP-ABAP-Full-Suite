@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler.js';
-import type { ToolDefinition } from '../types/tools.js';
-import { DebuggingMode, DebuggerScope, DebugBreakpoint, DebugSettings } from 'abap-adt-api';
+import { BaseHandler } from './BaseHandler';
+import type { ToolDefinition } from '../types/tools';
+import { ADTClient, DebuggingMode, DebugStepType, DebugBreakpoint } from 'abap-adt-api';
 
 export class DebugHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {

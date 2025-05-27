@@ -1,6 +1,12 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler';
 import type { ToolDefinition } from '../types/tools';
+import {
+    ADTClient, 
+    InactiveObject as AdtInactiveObject, 
+    ActivationResult as AdtActivationResult,
+    InactiveObjectRecord as AdtInactiveObjectRecord
+} from 'abap-adt-api';
 
 interface InactiveObject {
   "adtcore:uri": string;
@@ -21,7 +27,7 @@ interface ActivationResultMessage {
 interface ActivationResult {
   success: boolean;
   messages: ActivationResultMessage[];
-  inactive: InactiveObjectRecord[];
+  inactive: AdtInactiveObjectRecord[];
 }
 
 interface InactiveObjectElement extends InactiveObject {
@@ -108,47 +114,14 @@ export class ObjectManagementHandlers extends BaseHandler {
     }
   }
 
-  async handleActivateObjects(args: any): Promise<any> {
+  async handleActivateObjects(args: { objects: AdtInactiveObject[], preauditRequested?: boolean }): Promise<AdtActivationResult> {
     const startTime = performance.now();
     try {
-      if (!args.objects || typeof args.objects !== 'string') {
-        throw new McpError(ErrorCode.InvalidParams, "objects parameter must be a JSON string");
-      }
-
-      let objects: InactiveObject[];
-      try {
-        objects = JSON.parse(args.objects);
-        if (!Array.isArray(objects)) {
-          throw new Error("Parsed objects must be an array");
-        }
-        
-        // Validate each object has required properties
-        objects.forEach((obj, index) => {
-          if (!obj["adtcore:uri"] || !obj["adtcore:type"] || 
-              !obj["adtcore:name"] || !obj["adtcore:parentUri"]) {
-            throw new Error(`Object at index ${index} is missing required properties`);
-          }
-        });
-      } catch (parseError: any) {
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Invalid objects JSON: ${parseError.message}`
-        );
-      }
-
-      const result = await this.adtclient.activate(objects, args.preauditRequested);
+      const result = await this.adtclient.activate(args.objects, args.preauditRequested);
       this.trackRequest(startTime, true);
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result)
-        }]
-      };
+      return result;
     } catch (error: any) {
       this.trackRequest(startTime, false);
-      if (error instanceof McpError) {
-        throw error;
-      }
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to activate objects: ${error.message || 'Unknown error'}`
@@ -156,31 +129,14 @@ export class ObjectManagementHandlers extends BaseHandler {
     }
   }
 
-  async handleActivateByName(args: any): Promise<any> {
+  async handleActivateByName(args: { objectName: string, objectUrl: string, mainInclude?: string, preauditRequested?: boolean }): Promise<AdtActivationResult> {
     const startTime = performance.now();
     try {
-      if (!args.objectName || !args.objectUrl) {
-        throw new McpError(ErrorCode.InvalidParams, "objectName and objectUrl parameters are required");
-      }
-
-      const result = await this.adtclient.activate(
-        args.objectName,
-        args.objectUrl,
-        args.mainInclude,
-        args.preauditRequested
-      );
+      const result = await this.adtclient.activate(args.objectName, args.objectUrl, args.mainInclude, args.preauditRequested);
       this.trackRequest(startTime, true);
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result)
-        }]
-      };
+      return result;
     } catch (error: any) {
       this.trackRequest(startTime, false);
-      if (error instanceof McpError) {
-        throw error;
-      }
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to activate object: ${error.message || 'Unknown error'}`
@@ -188,25 +144,17 @@ export class ObjectManagementHandlers extends BaseHandler {
     }
   }
 
-  async handleInactiveObjects(args: any): Promise<any> {
+  async handleInactiveObjects(args: any): Promise<AdtInactiveObjectRecord[]> {
     const startTime = performance.now();
     try {
-      const result: InactiveObjectRecord[] = await this.adtclient.inactiveObjects();
+      const result = await this.adtclient.inactiveObjects();
       this.trackRequest(startTime, true);
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result)
-        }]
-      };
+      return result;
     } catch (error: any) {
       this.trackRequest(startTime, false);
-      if (error instanceof McpError) {
-        throw error;
-      }
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to get inactive objects: ${error.message || 'Unknown error'}`
+        `Failed to list inactive objects: ${error.message || 'Unknown error'}`
       );
     }
   }

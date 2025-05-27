@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { BaseHandler } from './BaseHandler.js';
-import type { ToolDefinition } from '../types/tools.js';
-import { NodeParents, NodeStructure } from "abap-adt-api";
+import { BaseHandler } from './BaseHandler';
+import type { ToolDefinition } from '../types/tools';
+import { ADTClient, NodeParents, NodeStructure } from 'abap-adt-api';
 
 export class NodeHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {

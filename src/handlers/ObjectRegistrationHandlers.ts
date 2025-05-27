@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler';
 import type { ToolDefinition } from '../types/tools';
+import { ADTClient, NewObjectOptions, ObjectTypeDescriptor, ValidateOptions, ValidationResult, CreatableTypeIds } from "abap-adt-api";
 
 export class ObjectRegistrationHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {

@@ -566,9 +566,11 @@ export class AbapAdtServer extends Server {
   }
 }
 
-// Create and run server instance
-const server = new AbapAdtServer();
-server.run().catch((error) => {
-  console.error('Failed to start MCP server:', error);
-  process.exit(1);
-});
+// Create and run server instance only if this script is executed directly
+if (require.main === module) {
+  const server = new AbapAdtServer();
+  server.run().catch((error) => {
+    console.error('Failed to start MCP server:', error);
+    process.exit(1);
+  });
+}
