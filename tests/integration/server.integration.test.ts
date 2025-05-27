@@ -88,33 +88,47 @@ describe('MCP ABAP ADT API - Integration Tests', () => {
   
   function waitForServerReady(child: ChildProcessWithoutNullStreams, timeout: number = DEFAULT_TIMEOUT): Promise<void> {
     return new Promise((resolve, reject) => {
-      const onData = (chunk: Buffer) => {
-        const output = chunk.toString();
-        stdoutBuffer.push(output);
-        // console.log(`SERVER STDOUT: ${output}`);
-        if (output.includes('mcp-abap-abap-adt-api server running.')) {
+      let resolved = false;
+      
+      const checkForReadyMessage = (output: string) => {
+        if (output.includes('mcp-abap-abap-adt-api server running.') && !resolved) {
+          resolved = true;
           child.stdout.removeListener('data', onData);
+          child.stderr.removeListener('data', onStderrData);
           clearTimeout(timer);
           serverReady = true;
           resolve();
         }
       };
+      
+      const onData = (chunk: Buffer) => {
+        const output = chunk.toString();
+        stdoutBuffer.push(output);
+        // console.log(`SERVER STDOUT: ${output}`);
+        checkForReadyMessage(output);
+      };
+      
       const onStderrData = (chunk: Buffer) => {
         const output = chunk.toString();
         stderrBuffer.push(output);
         // console.error(`SERVER STDERR: ${output}`);
+        checkForReadyMessage(output);
       };
 
       child.stdout.on('data', onData);
       child.stderr.on('data', onStderrData);
       
       child.on('error', (err) => {
-          clearTimeout(timer);
-          reject(new Error('Server process errored: ' + err.message));
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            reject(new Error('Server process errored: ' + err.message));
+          }
       });
 
       child.on('exit', (code, signal) => {
-          if (!serverReady) {
+          if (!serverReady && !resolved) {
+            resolved = true;
             clearTimeout(timer);
             const fullStderr = stderrBuffer.join('');
             reject(new Error(`Server process exited before ready. Code: ${code}, Signal: ${signal}. Stderr: ${fullStderr.substring(0, 500)}`));
@@ -122,11 +136,14 @@ describe('MCP ABAP ADT API - Integration Tests', () => {
       });
 
       const timer = setTimeout(() => {
-        child.stdout.removeListener('data', onData);
-        child.stderr.removeListener('data', onStderrData);
-        const fullStdout = stdoutBuffer.join('');
-        const fullStderr = stderrBuffer.join('');
-        reject(new Error(`Timeout waiting for server ready after ${timeout}ms. Stdout: ${fullStdout.substring(0,500)}. Stderr: ${fullStderr.substring(0,500)}`));
+        if (!resolved) {
+          resolved = true;
+          child.stdout.removeListener('data', onData);
+          child.stderr.removeListener('data', onStderrData);
+          const fullStdout = stdoutBuffer.join('');
+          const fullStderr = stderrBuffer.join('');
+          reject(new Error(`Timeout waiting for server ready after ${timeout}ms. Stdout: ${fullStdout.substring(0,500)}. Stderr: ${fullStderr.substring(0,500)}`));
+        }
       }, timeout);
     });
   }

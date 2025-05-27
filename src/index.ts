@@ -1361,7 +1361,7 @@ export class AbapAdtServer extends Server {
     
     const transport = new StdioServerTransport();
     await this.connect(transport);
-    console.log(`mcp-abap-abap-adt-api server running. Mode: ${this.isBtpConnection ? 'BTP OAuth' : 'Basic Auth'}`);
+    console.error(`mcp-abap-abap-adt-api server running. Mode: ${this.isBtpConnection ? 'BTP OAuth' : 'Basic Auth'}`);
     
     // Handle shutdown
     process.on('SIGINT', async () => {
