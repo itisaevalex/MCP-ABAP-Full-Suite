@@ -157,6 +157,14 @@ describe('AuthHandlers', () => {
     });
   });
 
+  describe('handle (invalid tool)', () => {
+    it('should throw McpError for an unknown tool name', async () => {
+      await expect(authHandlers.handle('unknownTool', {}))
+        .rejects
+        .toThrow(new McpError(ErrorCode.MethodNotFound, 'Unknown auth tool: unknownTool'));
+    });
+  });
+
   describe('getTools', () => {
     it('should return the correct tool definitions', () => {
       const tools = authHandlers.getTools();
