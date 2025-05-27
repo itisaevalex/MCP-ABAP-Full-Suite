@@ -55,12 +55,12 @@ export class AuthHandlers extends BaseHandler {
 
   private async handleLogin(args: any) {
     if (this.isBtpConnectionGetter()) {
-      console.log('AuthHandlers: BTP connection detected for login. Performing health check...');
+      console.error('AuthHandlers: BTP connection detected for login. Performing health check...');
       const startTime = performance.now();
       try {
         await this.adtclient.getObjectSource('/sap/bc/adt/repository/nodestructure/DEV/CLAS/SOME_NON_EXISTENT_OBJECT');
         this.trackRequest(startTime, true);
-        console.log('AuthHandlers: BTP health check successful.');
+        console.error('AuthHandlers: BTP health check successful.');
         return {
           content: [
             {
@@ -78,7 +78,7 @@ export class AuthHandlers extends BaseHandler {
                 `BTP OAuth token validation failed: ${error.message || 'Unknown error'}`
             );
         }
-        console.log('AuthHandlers: BTP health check completed (expected error for non-existent object).', error.message);
+        console.error('AuthHandlers: BTP health check completed (expected error for non-existent object).', error.message);
         return {
             content: [
               {
