@@ -90,6 +90,51 @@ npx -y @smithery/cli install @mario-andreschak/mcp-abap-abap-adt-api --client cl
 
    (or alternatively integrate the MCP Server into VSCode)
 
+## Running Locally
+
+### Quick Start
+
+```bash
+cp .env.example .env   # fill in your SAP connection details
+npm run build && node dist/index.js
+```
+
+### Authentication Modes
+
+This server supports two authentication modes:
+
+#### Basic Authentication (Traditional)
+Configure these environment variables in your `.env` file:
+```env
+SAP_URL=https://your-sap-server.com:44300
+SAP_USER=your_username
+SAP_PASSWORD=your_password
+SAP_CLIENT=100
+SAP_LANGUAGE=EN
+```
+
+#### BTP OAuth (Client Credentials)
+For SAP BTP ABAP Environment, configure these environment variables:
+```env
+SAP_URL=https://your-btp-abap-system.com:44300
+BTP_CLIENT_ID=your_oauth_client_id
+BTP_CLIENT_SECRET=your_oauth_client_secret
+BTP_TOKEN_URL=https://your-oauth-server.com/oauth/token
+SAP_CLIENT=100
+SAP_LANGUAGE=EN
+```
+
+The server automatically detects which mode to use based on the presence of `BTP_CLIENT_ID` and `BTP_TOKEN_URL`.
+
+### Testing
+
+Run the test suite to verify everything is working:
+```bash
+npm test
+```
+
+Integration tests use `nock` to mock HTTP calls, so no real SAP system access is required for testing.
+
 ## Usage
 
 Once the server is running, you can interact with it using MCP clients or tools that support the Model Context Protocol (e.g. [Cline](https://github.com/cline/cline)). In order to integrate the MCP Server with Cline, use the following MCP Configuration:

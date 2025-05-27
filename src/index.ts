@@ -170,12 +170,7 @@ export class AbapAdtServer extends Server {
   }
 
   private setupToolHandlers() {
-    console.error('DEBUG: setupToolHandlers() called');
-    console.error('DEBUG: authHandlers defined?', !!this.authHandlers);
-    console.error('DEBUG: transportHandlers defined?', !!this.transportHandlers);
-    
     this.setRequestHandler(ListToolsRequestSchema, async () => {
-      console.error('DEBUG: ListToolsRequestSchema handler called');
       return {
         tools: [
           ...this.authHandlers.getTools(),
@@ -215,12 +210,7 @@ export class AbapAdtServer extends Server {
       };
     });
 
-    console.error('DEBUG: Registering CallToolRequestSchema handler');
     this.setRequestHandler(CallToolRequestSchema, async (request) => {
-      console.error('DEBUG: CallToolRequestSchema handler called with request:', JSON.stringify(request, null, 2));
-      console.error('DEBUG: request.params.name:', request.params.name);
-      console.error('DEBUG: authHandlers defined in handler?', !!this.authHandlers);
-      
       try {
         let result: any;
         
@@ -228,7 +218,6 @@ export class AbapAdtServer extends Server {
           case 'login':
           case 'logout':
           case 'dropSession':
-            console.error('DEBUG: Matched auth tool case:', request.params.name);
             result = await this.authHandlers.handle(request.params.name, request.params.arguments);
             break;
           
@@ -1304,13 +1293,9 @@ export class AbapAdtServer extends Server {
       const BTP_CLIENT_SECRET = this.btpClientSecret || ''; 
       const BTP_TOKEN_URL = this.btpTokenUrl;
 
-      console.error('Attempting BTP OAuth connection setup with BearerFetcher...');
-      
       const fetchBearerToken = async (): Promise<string> => {
-        console.error('BearerFetcher: Fetching new OAuth token...');
         const tokenResponse = await fetchOAuthToken(BTP_TOKEN_URL, BTP_CLIENT_ID, BTP_CLIENT_SECRET);
         this.oauthToken = tokenResponse.access_token;
-        console.error('BearerFetcher: Successfully fetched OAuth token.');
         return tokenResponse.access_token;
       };
 
@@ -1328,11 +1313,9 @@ export class AbapAdtServer extends Server {
         process.env.SAP_LANGUAGE as string,
         adtClientOptions
       );
-      console.error('ADTClient configured for BTP OAuth using BearerFetcher.');
 
     } else {
       // Basic Auth
-      console.error('Configuring ADTClient for basic authentication...');
       this.adtClient = new ADTClient(
         process.env.SAP_URL as string,
         process.env.SAP_USER as string, // Use actual user
@@ -1341,12 +1324,10 @@ export class AbapAdtServer extends Server {
         process.env.SAP_LANGUAGE as string
         // No specific options needed here for basic auth with user/pass
       );
-      console.error('ADTClient configured for basic authentication.');
     }
     this.adtClient.stateful = session_types.stateful;
 
     // Initialize handlers now that adtClient is ready
-    console.error('DEBUG: About to initialize all handlers');
     this.authHandlers = new AuthHandlers(this.adtClient, () => this.isBtpConnection);
     this.transportHandlers = new TransportHandlers(this.adtClient);
     this.objectHandlers = new ObjectHandlers(this.adtClient);
@@ -1372,21 +1353,12 @@ export class AbapAdtServer extends Server {
     this.traceHandlers = new TraceHandlers(this.adtClient);
     this.refactorHandlers = new RefactorHandlers(this.adtClient);
     this.revisionHandlers = new RevisionHandlers(this.adtClient);
-    console.error('DEBUG: All handlers initialized.');
   }
 
   async run() {
-    console.error('DEBUG: run() method called');
-    
-    console.error('DEBUG: About to call initializeAdtClient()');
     await this.initializeAdtClient();
-    console.error('DEBUG: initializeAdtClient() completed');
-    
-    console.error('DEBUG: About to call setupToolHandlers()');
     this.setupToolHandlers();
-    console.error('DEBUG: setupToolHandlers() completed');
     
-    console.error('DEBUG: About to create transport and connect');
     const transport = new StdioServerTransport();
     await this.connect(transport);
     console.log(`mcp-abap-abap-adt-api server running. Mode: ${this.isBtpConnection ? 'BTP OAuth' : 'Basic Auth'}`);

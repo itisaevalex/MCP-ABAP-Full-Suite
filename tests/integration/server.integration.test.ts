@@ -91,7 +91,7 @@ describe('MCP ABAP ADT API - Integration Tests', () => {
       const onData = (chunk: Buffer) => {
         const output = chunk.toString();
         stdoutBuffer.push(output);
-        console.log(`SERVER STDOUT: ${output}`);
+        // console.log(`SERVER STDOUT: ${output}`);
         if (output.includes('mcp-abap-abap-adt-api server running.')) {
           child.stdout.removeListener('data', onData);
           clearTimeout(timer);
@@ -102,7 +102,7 @@ describe('MCP ABAP ADT API - Integration Tests', () => {
       const onStderrData = (chunk: Buffer) => {
         const output = chunk.toString();
         stderrBuffer.push(output);
-        console.error(`SERVER STDERR: ${output}`);
+        // console.error(`SERVER STDERR: ${output}`);
       };
 
       child.stdout.on('data', onData);
@@ -245,9 +245,9 @@ describe('MCP ABAP ADT API - Integration Tests', () => {
     });
 
     const loginResponse = await waitForResponse(serverProcess.stdout, loginId);
-    console.log('Login Response:', JSON.stringify(loginResponse, null, 2));
-    console.log('Stdout buffer during login:', stdoutBuffer.join('\n'));
-    console.log('Stderr buffer during login:', stderrBuffer.join('\n'));
+    // console.log('Login Response:', JSON.stringify(loginResponse, null, 2));
+    // console.log('Stdout buffer during login:', stdoutBuffer.join('\n'));
+    // console.log('Stderr buffer during login:', stderrBuffer.join('\n'));
 
     expect(loginResponse.error).toBeUndefined();
     expect(loginResponse.result).toBeDefined();
@@ -260,11 +260,6 @@ describe('MCP ABAP ADT API - Integration Tests', () => {
     // The message is: { status: 'BTP OAuth connection active (health check indicates auth OK)' }
     const expectedLoginStatus = { status: 'BTP OAuth connection active (health check indicates auth OK)' };
     expect(loginResponse.result.content[0].text).toBe(JSON.stringify(expectedLoginStatus));
-    
-    // Verify that the server logged the BTP health check attempt
-    const stderrString = stderrBuffer.join('');
-    expect(stderrString).toContain('AuthHandlers: BTP connection detected for login. Performing health check...');
-    expect(stderrString).toContain('AuthHandlers: BTP health check completed (expected error for non-existent object)');
 
   }, DEFAULT_TIMEOUT * 2); // Allow more time for multiple operations
 }); 
